@@ -29,7 +29,7 @@ const unlocksMap = new Map();
 let filteredTopics = [];
 let displayedCount = 48;
 const PAGE_SIZE = 48;
-let currentView = 'cards';
+let currentView = 'graph';
 let currentFocusTopic = null;
 
 let filterController = null;
@@ -101,6 +101,7 @@ async function init() {
 
     filterController.init();
     setupViewEvents();
+    setView('graph');
     applyFilters();
   } catch (err) {
     console.error('Initialization error:', err);
@@ -183,12 +184,14 @@ function setView(view) {
     cardsWrapper.style.display = 'none';
     graphWrapper.style.display = 'flex';
     if (resultsBar) resultsBar.style.display = 'none';
-    graphVisualizer.setGraphData({
-      filteredTopics,
-      dependencies: allDependencies,
-      topicMap,
-      focusTopic: currentFocusTopic
-    });
+    if (filteredTopics && filteredTopics.length > 0) {
+      graphVisualizer.setGraphData({
+        filteredTopics,
+        dependencies: allDependencies,
+        topicMap,
+        focusTopic: currentFocusTopic
+      });
+    }
     graphVisualizer.resize();
   }
 }

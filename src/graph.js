@@ -43,17 +43,21 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     lastInteractionTime = performance.now();
   }
 
-  // Dynamic 3D Cosmic Star Dust Cloud
+  // Dynamic 3D Cosmic Star Dust Cloud (Continuous Orbital Flow & Harmonic Float)
   const STAR_DUST_COUNT = 180;
   const starDust = [];
   for (let i = 0; i < STAR_DUST_COUNT; i++) {
     const rad = 70 + Math.pow(Math.random(), 0.72) * 730;
-    const theta = Math.random() * Math.PI * 2;
+    const baseTheta = Math.random() * Math.PI * 2;
+    // Differential slow orbital drift: inner dust drifts slightly faster than outer dust
+    const orbitSpeed = (0.000025 + (1 / Math.sqrt(rad)) * 0.00065) * (Math.random() > 0.1 ? 1 : -0.7);
     const py = (Math.random() - 0.5) * 580;
+    const vertFreq1 = 0.00025 + Math.random() * 0.00035;
+    const vertFreq2 = 0.00055 + Math.random() * 0.00045;
+    const vertAmp = 1.6 + Math.random() * 1.8; // subtle 1.6-3.4px micro-float (no harsh bounce)
     const r = 0.55 + Math.random() * 1.15;
     const baseAlpha = 0.14 + Math.random() * 0.28;
-    const twinkleSpeed = 0.0012 + Math.random() * 0.0022;
-    const driftSpeed = 0.0006 + Math.random() * 0.0012;
+    const twinkleSpeed = 0.0008 + Math.random() * 0.0014; // smooth starlight breathing
     const phase = Math.random() * Math.PI * 2;
     const randColor = Math.random();
     let rgb = '226, 232, 240'; // slate-200 celestial white
@@ -62,13 +66,16 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     else if (randColor < 0.48) rgb = '216, 180, 254'; // violet-300 nebula glow
 
     starDust.push({
-      x: rad * Math.cos(theta),
-      y: py,
-      z: rad * Math.sin(theta),
+      rad,
+      baseTheta,
+      orbitSpeed,
+      py,
+      vertFreq1,
+      vertFreq2,
+      vertAmp,
       r,
       baseAlpha,
       twinkleSpeed,
-      driftSpeed,
       phase,
       rgb,
       hasHalo: (r > 1.25 && Math.random() > 0.4)
@@ -577,16 +584,23 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     ctx.fill();
   }
 
-  // Render ambient dynamic star dust with zero per-frame object allocation
+  // Render ambient dynamic star dust with continuous orbital flow and organic breathing
   function drawStarDust(now, cy, sy, ct, st, cx, cyy, sc, hasSel) {
     const dimFactor = hasSel ? 0.22 : 1.0;
     const len = starDust.length;
     for (let i = 0; i < len; i++) {
       const d = starDust[i];
-      const dyOffset = Math.sin(now * d.driftSpeed + d.phase) * 12;
 
-      // 3D perspective projection in world space
-      const dx = d.x - camX, dy = (d.y + dyOffset) - camY, dz = d.z - camZ;
+      // 1. Continuous organic orbital drift around galactic core
+      const currentTheta = d.baseTheta + now * d.orbitSpeed;
+      const px = d.rad * Math.cos(currentTheta);
+      const pz = d.rad * Math.sin(currentTheta);
+
+      // 2. Micro compound vertical drift (smooth dual harmonic, no hard bounce)
+      const currentPy = d.py + (Math.sin(now * d.vertFreq1 + d.phase) + 0.35 * Math.cos(now * d.vertFreq2 + d.phase * 1.6)) * d.vertAmp;
+
+      // 3. 3D perspective projection in world space
+      const dx = px - camX, dy = currentPy - camY, dz = pz - camZ;
       const x = dx * cy + dz * sy, z = -dx * sy + dz * cy, y = dy;
       const y2 = y * ct - z * st, z2 = y * st + z * ct;
       const depth = FOV + z2 * sc * 1.5;
@@ -597,7 +611,8 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       const screenY = cyy - y2 * sc * pf;
       if (screenX < -20 || screenX > VW + 20 || screenY < -20 || screenY > VH + 20) continue;
 
-      const twinkle = 0.65 + 0.35 * Math.sin(now * d.twinkleSpeed + d.phase);
+      // 4. Optical luminance breathing (organic starlight shimmer)
+      const twinkle = 0.72 + 0.28 * Math.sin(now * d.twinkleSpeed + d.phase);
       const alpha = d.baseAlpha * twinkle * dimFactor * Math.min(1.2, pf * 1.15);
       if (alpha <= 0.015) continue;
 
@@ -702,11 +717,6 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
         ctx.fill();
         ctx.shadowBlur = 0;
 
-        // Label
-        ctx.font = 'bold 9px Plus Jakarta Sans, sans-serif';
-        ctx.fillStyle = 'rgba(254, 240, 138, 0.65)';
-        ctx.textAlign = 'center';
-        ctx.fillText('CORE FOUNDATIONS', sunPt.x, sunPt.y + sunR * 0.7 + 14);
       }
 
       ctx.restore();
