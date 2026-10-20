@@ -43,9 +43,9 @@ export function createFilterController({
   function updateSearchPlaceholder() {
     if (!searchInput) return;
     if (window.innerWidth <= 600) {
-      searchInput.placeholder = 'Search 1,591 topics...';
+      searchInput.placeholder = 'Search 1,591 skills...';
     } else {
-      searchInput.placeholder = 'Search topics, concepts, standards... (Press / to focus)';
+      searchInput.placeholder = 'Search skills, for example fractions or phonics (Press / to focus)';
     }
   }
 
@@ -165,7 +165,9 @@ export function createFilterController({
     });
 
     Object.keys(subjectColors).forEach(subject => {
-      const chip = document.createElement('div');
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.setAttribute('aria-pressed', 'true');
       chip.className = 'subject-chip active';
       chip.dataset.subject = subject;
       const color = subjectColors[subject];
@@ -201,6 +203,7 @@ export function createFilterController({
   function updateSubjectChipsActiveState() {
     subjectChipsContainer.querySelectorAll('.subject-chip').forEach(chip => {
       chip.classList.toggle('active', filterState.selectedSubjects.has(chip.dataset.subject));
+      chip.setAttribute('aria-pressed', filterState.selectedSubjects.has(chip.dataset.subject) ? 'true' : 'false');
     });
     updateMobileFilterSummary();
   }

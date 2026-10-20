@@ -1,6 +1,6 @@
 # Strata Learning Graph
 
-An interactive explorer and structured taxonomy of **what children learn** across primary/elementary years — decomposed into fine-grained micro-topics, connected in a prerequisite dependency graph, and aligned to national curriculum standards.
+An interactive explorer and structured taxonomy of **what children learn** across ages 4 to 15 — decomposed into fine-grained micro-topics, connected in a prerequisite dependency graph, and aligned to national curriculum standards.
 
 > **Created by:** [Samiul Islam](https://www.linkedin.com/in/samiulislam/)
 > **Project Fork:** Forked from the [Marble Skill Taxonomy](https://github.com/withmarbleapp/os-taxonomy) by [Marble](https://withmarble.com).
@@ -26,10 +26,9 @@ Then open your browser to **`http://localhost:3000`**.
 
 ### UI Features
 
-- **Fast Multi-Filter Search:** Filter dynamically by age range (4–15), subjects, domains, and knowledge types (conceptual, procedural, representational, language, meta).
+- **Fast Multi-Filter Search:** Filter by age and subject, and search by name, description, domain or standard code.
 - **Prerequisite Pathways:** Click any topic card to open the detail drawer and inspect prerequisite concepts ("Must Learn First") and outgoing dependencies ("Unlocks Next").
-- **Interactive Graph View:** Switch to the 2D/3D DAG canvas view to visualize topic connectivity and clusters.
-- **Diagnostic Prompts:** Test concept mastery with customizable diagnostic questions.
+- **Interactive Graph View:** Switch to the 3D map view to visualize topic connectivity and clusters.
 
 ---
 

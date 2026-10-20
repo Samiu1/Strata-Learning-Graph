@@ -1,5 +1,14 @@
 // Detail Drawer Module
 
+const TYPE_LABELS = {
+  CONCEPTUAL: 'Understanding',
+  PROCEDURAL: 'Step-by-step',
+  REPRESENTATIONAL: 'Visual',
+  LANGUAGE: 'Language',
+  META: 'Learning habits'
+};
+const typeLabel = t => TYPE_LABELS[t] || t;
+
 export function createDetailController({ onSelectTopic, onClose, getTopicById, getDependenciesForTopic, clusters, getSubjectColor }) {
   const drawer = document.getElementById('detail-drawer');
   const backdrop = document.getElementById('drawer-backdrop');
@@ -77,7 +86,8 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
     currentTopic = topic;
     backBtn.disabled = history.length === 0;
 
-    topicIdEl.textContent = topic.id;
+    topicIdEl.dataset.id = topic.id;
+    topicIdEl.onclick = async () => { try { await navigator.clipboard.writeText(topic.id); topicIdEl.textContent = 'Copied'; setTimeout(() => topicIdEl.textContent = 'Copy ID', 1200); } catch (e) {} };
     titleEl.textContent = topic.name;
     descEl.textContent = topic.description || 'No description available.';
 
@@ -89,7 +99,7 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
 
     domainEl.textContent = topic.domain;
     ageEl.textContent = `Ages ${topic.ageRangeStart}–${topic.ageRangeEnd}`;
-    typeEl.textContent = topic.type;
+    typeEl.textContent = typeLabel(topic.type);
 
     // Cluster summary (parent-friendly context)
     const matchedCluster = clusters.find(
@@ -113,10 +123,10 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
     const quickPrereqsEl = document.getElementById('quick-stat-prereqs');
     const quickUnlocksEl = document.getElementById('quick-stat-unlocks');
     if (quickPrereqsEl) {
-      quickPrereqsEl.textContent = `🟡 ${prereqs.length} Prerequisite${prereqs.length === 1 ? '' : 's'}`;
+      quickPrereqsEl.textContent = `🟡 Learn first: ${prereqs.length}`;
     }
     if (quickUnlocksEl) {
-      quickUnlocksEl.textContent = `🔵 ${unlocks.length} Unlock${unlocks.length === 1 ? '' : 's'}`;
+      quickUnlocksEl.textContent = `🔵 Leads to: ${unlocks.length}`;
     }
 
     renderPrereqList(prereqsListEl, prereqs, 'prereq');
@@ -134,7 +144,7 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
     } else {
       const li = document.createElement('li');
       li.className = 'evidence-item';
-      li.textContent = 'Evidence criteria pending specification.';
+      li.textContent = 'No checkpoints listed yet.';
       evidenceListEl.appendChild(li);
     }
 
@@ -166,7 +176,7 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
       emptyDiv.style.fontSize = '0.75rem';
       emptyDiv.style.color = 'var(--text-dim)';
       emptyDiv.style.fontStyle = 'italic';
-      emptyDiv.textContent = type === 'prereq' ? 'No prerequisites (Foundational concept)' : 'No known onward dependencies';
+      emptyDiv.textContent = type === 'prereq' ? 'Nothing needed first. This is a starting skill.' : 'No later skills depend on this one.';
       container.appendChild(emptyDiv);
       return;
     }
@@ -178,7 +188,8 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
       div.className = 'dep-item';
 
       const isHard = dep.strength === 'hard';
-      const strengthBadge = `<span class="${isHard ? 'dep-badge-hard' : 'dep-badge-soft'}">${dep.strength.toUpperCase()}</span>`;
+      const strengthTitle = isHard ? "Needed first: this skill is hard to learn without it." : "Helpful first: it makes this skill easier.";
+      const strengthBadge = `<span class="${isHard ? 'dep-badge-hard' : 'dep-badge-soft'}" title="${strengthTitle}">${isHard ? 'NEEDED FIRST' : 'HELPFUL FIRST'}</span>`;
       const topicName = targetTopic ? targetTopic.name : targetId;
       const ageText = targetTopic ? ` (Ages ${targetTopic.ageRangeStart}–${targetTopic.ageRangeEnd})` : '';
 

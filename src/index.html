@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Strata Learning Graph | Curriculum & Prerequisite Explorer</title>
+  <title>Strata Learning Graph: see what children learn, and in what order</title>
   <meta name="title" content="Strata Learning Graph: see what children learn, and in what order">
-  <meta name="description" content="An interactive map of 1,591 primary-school micro-topics and 3,225 prerequisite links. Trace any concept back to what must be mastered first.">
+  <meta name="description" content="1,591 skills for ages 4 to 15 and how they build on each other. See what to learn first and what comes next.">
   <meta name="author" content="Samiul Islam">
   <link rel="canonical" href="https://strata-learning-graph.vercel.app/">
 
@@ -14,18 +14,18 @@
   <meta property="og:url" content="https://strata-learning-graph.vercel.app/">
   <meta property="og:site_name" content="Strata Learning Graph">
   <meta property="og:title" content="Strata Learning Graph: see what children learn, and in what order">
-  <meta property="og:description" content="An interactive map of 1,591 primary-school micro-topics and 3,225 prerequisite links. Trace any concept back to what must be mastered first.">
+  <meta property="og:description" content="1,591 skills for ages 4 to 15 and how they build on each other. See what to learn first and what comes next.">
   <meta property="og:image" content="https://strata-learning-graph.vercel.app/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:type" content="image/png">
-  <meta property="og:image:alt" content="Strata Learning Graph: a dependency graph of primary curriculum topics">
+  <meta property="og:image:alt" content="Strata Learning Graph: skills for ages 4 to 15 and how they build on each other">
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="https://strata-learning-graph.vercel.app/">
   <meta name="twitter:title" content="Strata Learning Graph: see what children learn, and in what order">
-  <meta name="twitter:description" content="An interactive map of 1,591 primary-school micro-topics and 3,225 prerequisite links.">
+  <meta name="twitter:description" content="1,591 skills for ages 4 to 15 and how they build on each other. See what to learn first and what comes next.">
   <meta name="twitter:image" content="https://strata-learning-graph.vercel.app/og-image.png">
 
   <!-- Favicon & App Icons -->
@@ -49,7 +49,7 @@
         <img src="logo.png" alt="Strata Learning Graph Logo" class="brand-logo" width="34" height="34">
         <div class="brand-title-wrap">
           <h1 class="brand-title">Strata Learning Graph</h1>
-          <span class="brand-subtitle">1,591 Micro-Topics · 3,225 Prerequisite Edges</span>
+          <span class="brand-subtitle">1,591 skills · ages 4 to 15 · 8 subjects</span>
         </div>
       </div>
 
@@ -58,19 +58,19 @@
           <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor" width="18" height="18">
             <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
           </svg>
-          <input type="text" id="search-input" class="search-input" placeholder="Search topics, concepts, standards, IDs... (Press / to focus)" autocomplete="off">
+          <input type="text" id="search-input" class="search-input" placeholder="Search skills, for example fractions or phonics (Press / to focus)" autocomplete="off">
           <button id="search-clear-btn" class="search-clear-btn" title="Clear search" aria-label="Clear search">×</button>
         </div>
       </div>
 
       <div class="header-actions">
         <div class="view-toggle" id="view-toggle">
-          <button class="toggle-btn active" id="btn-view-graph" title="Interactive DAG Graph View">
+          <button class="toggle-btn active" id="btn-view-graph" title="Skill map">
             <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
               <path d="M12.232 4.232a2.5 2.5 0 013.536 3.536l-1.225 1.224a.75.75 0 001.061 1.06l1.224-1.224a4 4 0 00-5.656-5.656l-3 3a4 4 0 00.225 5.865.75.75 0 00.977-1.138 2.5 2.5 0 01-.142-3.667l3-3z"/>
               <path d="M11.603 7.963a.75.75 0 00-.977 1.138 2.5 2.5 0 01.142 3.667l-3 3a2.5 2.5 0 01-3.536-3.536l1.225-1.224a.75.75 0 00-1.061-1.06l-1.224 1.224a4 4 0 105.656 5.656l3-3a4 4 0 00-.225-5.865z"/>
             </svg>
-            3D Graph
+            Skill map
           </button>
           <button class="toggle-btn" id="btn-view-cards" title="Cards View">
             <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
@@ -112,7 +112,7 @@
         <!-- Age Filter -->
         <section class="filter-section">
           <div class="section-title-row">
-            <span class="filter-label">Target Age Range</span>
+            <span class="filter-label">Child's age</span>
             <span class="age-display" id="age-display">Ages 4 – 15</span>
           </div>
 
@@ -155,10 +155,10 @@
           <select id="sort-select" class="custom-select">
             <option value="age-asc">Age: Youngest First</option>
             <option value="age-desc">Age: Oldest First</option>
-            <option value="centrality-desc">Graph Centrality (Key concepts)</option>
+            <option value="centrality-desc">Most important building blocks</option>
             <option value="name-asc">Name: A to Z</option>
-            <option value="prereqs-desc">Most Prerequisites</option>
-            <option value="unlocks-desc">Most Unlocks</option>
+            <option value="prereqs-desc">Most to learn first</option>
+            <option value="unlocks-desc">Most leads to</option>
           </select>
         </section>
 
@@ -168,17 +168,18 @@
             Created by <a href="https://www.linkedin.com/in/samiulislam/" target="_blank" rel="noopener noreferrer">Samiul Islam</a>
           </div>
           <p class="attribution-text">
-            Based on the Marble Skill Taxonomy (v1) · © Generative Spark, Inc. (Marble) · <a href="https://withmarble.com" target="_blank" rel="noopener noreferrer">withmarble.com</a> · licensed under <a href="https://github.com/withmarbleapp/os-taxonomy/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">ODbL 1.0</a> (database) and <a href="https://github.com/withmarbleapp/os-taxonomy/blob/main/LICENSE-CONTENT" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a> (content).
+            Based on the Marble Skill Taxonomy (v1), ODbL 1.0 and CC BY-SA 4.0. Full credit on the <a href="about.html">About page</a>.
           </p>
         </footer>
       </aside>
 
       <!-- Main Content Area -->
       <main class="content-area" id="content-area">
+        <div id="sr-status" class="sr-only" role="status" aria-live="polite"></div>
         <!-- Results Summary Bar -->
         <div class="results-bar" id="results-bar" style="display: none;">
           <div class="results-stats">
-            <span class="count-badge" id="filtered-count">Loading topics...</span>
+            <span class="count-badge" id="filtered-count">Loading skills...</span>
             <div class="active-filter-tags" id="active-filter-tags"></div>
           </div>
         </div>
@@ -190,14 +191,14 @@
           <!-- Empty State -->
           <div class="empty-state" id="empty-state" style="display: none;">
             <div class="empty-icon">🔍</div>
-            <h3 class="empty-title">No matching topics found</h3>
+            <h3 class="empty-title">No matching skills found</h3>
             <p class="empty-desc">Try widening your age range, clearing search terms, or selecting additional subjects.</p>
             <button class="primary-btn" id="btn-empty-reset">Reset All Filters</button>
           </div>
 
           <!-- Load More Bar -->
           <div class="pagination-bar" id="pagination-bar">
-            <button class="secondary-btn" id="btn-load-more" style="display: none;">Load More Topics</button>
+            <button class="secondary-btn" id="btn-load-more" style="display: none;">Show more skills</button>
             <span class="pagination-info" id="pagination-info"></span>
           </div>
         </div>
@@ -206,8 +207,8 @@
         <div class="graph-view-wrapper" id="graph-view-wrapper">
           <div class="graph-toolbar">
             <div class="graph-toolbar-left">
-              <span class="graph-title" id="graph-status-title">Taxonomy DAG View</span>
-              <span class="graph-subtitle" id="graph-status-subtitle">Showing prerequisite relationships for filtered topics</span>
+              <span class="graph-title" id="graph-status-title">Skill map</span>
+              <span class="graph-subtitle" id="graph-status-subtitle">Showing skills and how they build on each other</span>
             </div>
             <div class="graph-toolbar-controls">
               <button class="graph-control-btn" id="btn-graph-fit" title="Fit to screen">Fit</button>
@@ -223,29 +224,34 @@
           <!-- "What is this" Interactive Guide Card -->
           <div class="graph-guide-banner" id="graph-guide-banner">
             <div class="guide-banner-content">
-              <span class="guide-icon">🪐</span>
+              <span class="guide-icon">💡</span>
               <div class="guide-text">
-                <strong>Curriculum Galaxy:</strong> 1,591 topics connected by prerequisite pathways. <em>Tap any node</em> to see what it unlocks.
+                <strong>Skill map:</strong> each dot is one skill, colored by subject. <em>Click a dot</em> to see what to learn first (yellow) and what it leads to (blue).
               </div>
             </div>
             <button class="guide-dismiss-btn" id="btn-dismiss-guide" title="Dismiss guide" aria-label="Dismiss guide">×</button>
           </div>
           <div class="graph-canvas-container" id="graph-canvas-container">
-            <canvas id="graph-canvas"></canvas>
+            <canvas id="graph-canvas" role="img" aria-label="Skill map: each dot is one skill, colored by subject. Switch to Cards for a keyboard-friendly list."></canvas>
             <div class="graph-tooltip" id="graph-tooltip" style="display: none;"></div>
+            <div class="graph-empty" id="graph-empty" hidden>
+              <h3>No skills match</h3>
+              <p>Try a different search, a wider age range, or more subjects.</p>
+              <button class="primary-btn" id="btn-graph-empty-reset" type="button">Reset filters</button>
+            </div>
           </div>
         </div>
 
         <!-- Topic Inspector Drawer -->
         <div class="detail-drawer-backdrop" id="drawer-backdrop"></div>
-        <aside class="detail-drawer" id="detail-drawer" aria-label="Topic details inspector">
+        <aside class="detail-drawer" id="detail-drawer" aria-label="Skill details inspector">
           <div class="drawer-drag-handle" id="drawer-drag-handle" title="Tap to expand or collapse details"></div>
           <div class="drawer-header">
             <div class="drawer-header-left">
-              <button class="drawer-nav-btn" id="drawer-btn-back" title="Go back to previous topic" disabled>
+              <button class="drawer-nav-btn" id="drawer-btn-back" title="Go back to previous skill" disabled>
                 ← Back
               </button>
-              <span class="drawer-id-badge" id="drawer-topic-id">mt_...</span>
+              <button class="drawer-id-badge" id="drawer-topic-id" type="button" title="Copy skill ID">Copy ID</button>
             </div>
             <button class="drawer-close-btn" id="drawer-btn-close" aria-label="Close inspector">×</button>
           </div>
@@ -259,44 +265,44 @@
                 <span class="age-badge" id="drawer-age">Ages 5–7</span>
                 <span class="type-badge" id="drawer-type">CONCEPTUAL</span>
               </div>
-              <h2 class="drawer-title" id="drawer-title">Topic Title</h2>
+              <h2 class="drawer-title" id="drawer-title">Skill Title</h2>
               <div class="drawer-quick-stat" id="drawer-quick-stat">
-                <span class="quick-stat-prereqs" id="quick-stat-prereqs">🟡 0 Prerequisites</span>
+                <span class="quick-stat-prereqs" id="quick-stat-prereqs">🟡 Learn first: 0</span>
                 <span class="quick-stat-divider">·</span>
-                <span class="quick-stat-unlocks" id="quick-stat-unlocks">🔵 0 Unlocks</span>
+                <span class="quick-stat-unlocks" id="quick-stat-unlocks">🔵 Leads to: 0</span>
               </div>
-              <p class="drawer-desc" id="drawer-desc">Topic description goes here...</p>
+              <p class="drawer-desc" id="drawer-desc">Skill description goes here...</p>
             </div>
 
             <!-- Domain Summary Cluster -->
             <div class="drawer-section" id="drawer-cluster-box" style="display: none;">
-              <h4 class="section-heading">What Your Child Is Learning Context</h4>
+              <h4 class="section-heading">What children this age learn in this area</h4>
               <p class="cluster-text" id="drawer-cluster-text"></p>
             </div>
 
             <!-- Interactive Prerequisite Pathway View -->
             <div class="drawer-section">
               <div class="section-title-split">
-                <h4 class="section-heading">Prerequisites </h4>
+                <h4 class="section-heading">Learn this first</h4>
                 <span class="count-pill" id="drawer-prereqs-count">0</span>
               </div>
-              <p class="section-subtext">Concepts that must be mastered before studying this topic.</p>
+              <p class="section-subtext">Skills that come before this one.</p>
               <div class="dep-list" id="drawer-prereqs-list"></div>
             </div>
 
             <!-- Outgoing Dependencies -->
             <div class="drawer-section">
               <div class="section-title-split">
-                <h4 class="section-heading">Unlocks</h4>
+                <h4 class="section-heading">Leads to</h4>
                 <span class="count-pill" id="drawer-unlocks-count">0</span>
               </div>
-              <p class="section-subtext">Topics that depend directly on mastering this concept.</p>
+              <p class="section-subtext">Skills that build on this one.</p>
               <div class="dep-list" id="drawer-unlocks-list"></div>
             </div>
 
             <!-- Mastery Evidence -->
             <div class="drawer-section">
-              <h4 class="section-heading">Success Checkpoints</h4>
+              <h4 class="section-heading">How to tell your child has got it</h4>
               <ul class="evidence-list" id="drawer-evidence-list"></ul>
             </div>
 
@@ -310,7 +316,7 @@
             <!-- Data Attribution -->
             <div class="drawer-section drawer-attribution">
               <p class="drawer-attribution-text">
-                Based on the Marble Skill Taxonomy (v1) · © Generative Spark, Inc. (Marble) · <a href="https://withmarble.com" target="_blank" rel="noopener noreferrer">withmarble.com</a> · licensed under <a href="https://github.com/withmarbleapp/os-taxonomy/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">ODbL 1.0</a> (database) and <a href="https://github.com/withmarbleapp/os-taxonomy/blob/main/LICENSE-CONTENT" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a> (content).
+                Based on the Marble Skill Taxonomy (v1), ODbL 1.0 and CC BY-SA 4.0. Full credit on the <a href="about.html">About page</a>.
               </p>
             </div>
           </div>

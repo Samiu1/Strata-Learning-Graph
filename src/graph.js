@@ -35,7 +35,8 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
   let P = new Float32Array(0);
 
   // Solar System Celestial Auto-Orbit
-  const AUTO_ORBIT_SPEED = 0.0011;
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const AUTO_ORBIT_SPEED = prefersReducedMotion ? 0 : 0.0011;
   let autoSpeed = AUTO_ORBIT_SPEED;
   let lastInteractionTime = 0; // 0 ensures rotation starts immediately upon graph load
 
@@ -207,8 +208,8 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     markInteraction();
     selectedId = null; lineage = null; hoverIdx = -1;
     hideTooltip(); resetCamera();
-    statusTitle.textContent = `3D Curriculum Galaxy (${nodes.length.toLocaleString()} topics)`;
-    statusSubtitle.textContent = `Rotate: Drag · Pan: Middle/Shift+Drag · Zoom: Scroll · Click any node to explore connections`;
+    statusTitle.textContent = `Skill map (${nodes.length.toLocaleString()} skills)`;
+    statusSubtitle.textContent = `Each dot is a skill. Click one to see what comes before and after. Drag to rotate, scroll to zoom.`;
     if (onResetFocus) onResetFocus();
   });
 
@@ -335,8 +336,8 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     if (idx < 0) {
       selectedId = null; lineage = null;
       camXTarget = SUN_X; camYTarget = GALAXY_CENTER_Y; camZTarget = SUN_Z;
-      statusTitle.textContent = `3D Curriculum Galaxy (${nodes.length.toLocaleString()} topics)`;
-      statusSubtitle.textContent = `Rotate: Drag · Pan: Middle/Shift+Drag · Zoom: Scroll · Click any node to explore connections`;
+      statusTitle.textContent = `Skill map (${nodes.length.toLocaleString()} skills)`;
+      statusSubtitle.textContent = `Each dot is a skill. Click one to see what comes before and after. Drag to rotate, scroll to zoom.`;
       if (onResetFocus) onResetFocus();
       return;
     }
@@ -413,7 +414,7 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     const dU = directUnlockNodes.size, sU = unlockNodes.size - dU;
     const selTopic = nodes[targetIdx].topic;
     statusTitle.innerHTML = `<span style="color:#ffffff; font-weight:700;">★ ${escapeHtml(selTopic.name)}</span>`;
-    statusSubtitle.innerHTML = `<span style="color:#f59e0b; font-weight:600;">🟡 ${dP} Direct Prereq${dP===1?'':'s'}${sP > 0 ? ` <span style="color:#fde68a; font-weight:400;">(+${sP} secondary)</span>` : ''}</span> · <span style="color:#38bdf8; font-weight:600;">🔵 ${dU} Direct Unlock${dU===1?'':'s'}${sU > 0 ? ` <span style="color:#bae6fd; font-weight:400;">(+${sU} secondary)</span>` : ''}</span> · <span style="color:#94a3b8;">Click any node to navigate</span>`;
+    statusSubtitle.innerHTML = `<span style="color:#f59e0b; font-weight:600;">🟡 ${dP} Learn first${sP > 0 ? ` <span style="color:#fde68a; font-weight:400;">(+${sP} secondary)</span>` : ''}</span> · <span style="color:#38bdf8; font-weight:600;">🔵 ${dU} Leads to${sU > 0 ? ` <span style="color:#bae6fd; font-weight:400;">(+${sU} secondary)</span>` : ''}</span> · <span style="color:#94a3b8;">Click any node to navigate</span>`;
   }
 
   function showTooltip(x, y, node) {
@@ -426,27 +427,27 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       if (node.topic.id === selectedId) {
         relTag = '<div style="color: #ffffff; font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; letter-spacing: 0.03em;">★ SELECTED</div>';
       } else if (lineage.directPrereqNodes.has(node.idx)) {
-        relTag = '<div style="color: #f59e0b; font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; letter-spacing: 0.03em;">🟡 DIRECT PREREQUISITE</div>';
+        relTag = '<div style="color: #f59e0b; font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; letter-spacing: 0.03em;">🟡 LEARN FIRST</div>';
         const edge = edges.find(e => e.sourceIdx === lineage.targetIdx && e.targetIdx === node.idx);
         if (edge && edge.reason) {
           reasonText = `<div style="margin-top: 5px; padding-top: 5px; border-top: 1px dashed rgba(245, 158, 11, 0.35); font-size: 0.72rem; color: #fde68a; font-style: italic;">"${escapeHtml(edge.reason)}"</div>`;
         }
       } else if (lineage.prereqNodes.has(node.idx)) {
-        relTag = '<div style="color: #fde68a; font-size: 0.7rem; font-weight: 600; margin-bottom: 3px;">🟡 SECONDARY PREREQUISITE (Ancestor requirement)</div>';
+        relTag = '<div style="color: #fde68a; font-size: 0.7rem; font-weight: 600; margin-bottom: 3px;">🟡 ALSO LEARN FIRST</div>';
       } else if (lineage.directUnlockNodes.has(node.idx)) {
-        relTag = '<div style="color: #38bdf8; font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; letter-spacing: 0.03em;">🔵 DIRECT UNLOCK</div>';
+        relTag = '<div style="color: #38bdf8; font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; letter-spacing: 0.03em;">🔵 LEADS TO</div>';
         const edge = edges.find(e => e.targetIdx === lineage.targetIdx && e.sourceIdx === node.idx);
         if (edge && edge.reason) {
           reasonText = `<div style="margin-top: 5px; padding-top: 5px; border-top: 1px dashed rgba(56, 189, 248, 0.35); font-size: 0.72rem; color: #bae6fd; font-style: italic;">"${escapeHtml(edge.reason)}"</div>`;
         }
       } else if (lineage.unlockNodes.has(node.idx)) {
-        relTag = '<div style="color: #bae6fd; font-size: 0.7rem; font-weight: 600; margin-bottom: 3px;">🔵 SECONDARY UNLOCK </div>';
+        relTag = '<div style="color: #bae6fd; font-size: 0.7rem; font-weight: 600; margin-bottom: 3px;">🔵 LEADS TO LATER</div>';
       }
     }
 
     const clickPrompt = (selectedId && node.topic.id !== selectedId)
       ? '<div style="margin-top: 6px; font-size: 0.68rem; font-weight: 600; color: #38bdf8; display: flex; align-items: center; gap: 4px;">Click node to focus & navigate →</div>'
-      : '<div style="margin-top: 4px; font-size: 0.68rem; color: #94a3b8;">Click to inspect topic & prerequisite pathways</div>';
+      : '<div style="margin-top: 4px; font-size: 0.68rem; color: #94a3b8;">Click to inspect skill and what comes next</div>';
 
     tooltip.innerHTML = `
       ${relTag}
@@ -482,8 +483,8 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     } else {
       selectedId = null;
       lineage = null;
-      statusTitle.textContent = `3D Curriculum Galaxy (${nodes.length.toLocaleString()} topics)`;
-      statusSubtitle.textContent = `Rotate: Drag · Pan: Middle/Shift+Drag · Zoom: Scroll · Click any node to explore connections`;
+      statusTitle.textContent = `Skill map (${nodes.length.toLocaleString()} skills)`;
+      statusSubtitle.textContent = `Each dot is a skill. Click one to see what comes before and after. Drag to rotate, scroll to zoom.`;
       hideTooltip();
     }
   }
@@ -495,8 +496,8 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
   }
 
   function build3DData(filteredTopics, dependencies) {
-    statusTitle.textContent = `3D Curriculum Galaxy (${filteredTopics.length.toLocaleString()} topics)`;
-    statusSubtitle.textContent = `Rotate: Left Drag · Pan: Middle Drag / Shift+Drag · Zoom: Scroll`;
+    statusTitle.textContent = `Skill map (${filteredTopics.length.toLocaleString()} skills)`;
+    statusSubtitle.textContent = `Each dot is a skill. Click one to see what comes before and after. Drag to rotate, scroll to zoom.`;
 
     const subjectAngles = {
       'Science': 0.0,
@@ -654,7 +655,7 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     const now = performance.now();
 
     // 0. Ambient Cosmic Star Dust (deepest background layer)
-    drawStarDust(now, cy, sy, ct, st, cx, cyy, sc, hasSel);
+    drawStarDust(prefersReducedMotion ? 0 : now, cy, sy, ct, st, cx, cyy, sc, hasSel);
 
     // 1. Draw Subtle Orbital Age Reference Rings (when no node selected)
     if (!hasSel && nodes.length > 0) {
@@ -1010,7 +1011,7 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     let pCount = 0;
     for (const b of directPrereqBadges) {
       if (pCount >= maxDirectBadges) break;
-      if (drawNodeBadge(b.name, '🟡 PREREQUISITE', b.sx, b.sy, b.r, '#f59e0b', '#fde68a', '#f59e0b', false)) {
+      if (drawNodeBadge(b.name, '🟡 LEARN FIRST', b.sx, b.sy, b.r, '#f59e0b', '#fde68a', '#f59e0b', false)) {
         pCount++;
       }
     }
@@ -1018,7 +1019,7 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     let uCount = 0;
     for (const b of directUnlockBadges) {
       if (uCount >= maxDirectBadges) break;
-      if (drawNodeBadge(b.name, '🔵 UNLOCKS', b.sx, b.sy, b.r, '#38bdf8', '#bae6fd', '#38bdf8', false)) {
+      if (drawNodeBadge(b.name, '🔵 LEADS TO', b.sx, b.sy, b.r, '#38bdf8', '#bae6fd', '#38bdf8', false)) {
         uCount++;
        }
     }
