@@ -828,8 +828,6 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
         drawNodeBadge(n.topic.name, '🟡 MUST LEARN FIRST', sx, sy, r, '#f59e0b', '#fde68a', '#f59e0b');
       } else if (isDirectUnlock) {
         drawNodeBadge(n.topic.name, '🔵 UNLOCKS NEXT', sx, sy, r, '#38bdf8', '#bae6fd', '#38bdf8');
-      } else if (isHover) {
-        drawNodeBadge(n.topic.name, n.topic.subject.toUpperCase(), sx, sy, r, n.col, '#ffffff', n.col);
       }
     }
     ctx.globalAlpha = 1.0;

@@ -24,9 +24,6 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
   const unlocksListEl = document.getElementById('drawer-unlocks-list');
 
   const evidenceListEl = document.getElementById('drawer-evidence-list');
-  const promptBox = document.getElementById('drawer-prompt-box');
-  const promptTextEl = document.getElementById('drawer-prompt-text');
-  const childNameInput = document.getElementById('child-name-input');
   const standardsListEl = document.getElementById('drawer-standards-list');
 
   let currentTopic = null;
@@ -53,9 +50,6 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
     }
   });
 
-  childNameInput.addEventListener('input', () => {
-    updateAssessmentPrompt();
-  });
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && drawer.classList.contains('open')) {
@@ -135,8 +129,6 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
       evidenceListEl.appendChild(li);
     }
 
-    // Assessment Prompt
-    updateAssessmentPrompt();
 
     // Standards
     standardsListEl.innerHTML = '';
@@ -157,15 +149,6 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
     drawer.querySelector('.drawer-content').scrollTop = 0;
   }
 
-  function updateAssessmentPrompt() {
-    if (!currentTopic || !currentTopic.assessmentPrompt) {
-      promptTextEl.textContent = 'No assessment prompt formulated.';
-      return;
-    }
-    const name = childNameInput.value.trim() || 'the learner';
-    const text = currentTopic.assessmentPrompt.replace(/\{\{name\}\}/g, name);
-    promptTextEl.textContent = `"${text}"`;
-  }
 
   function renderPrereqList(container, items, type) {
     container.innerHTML = '';

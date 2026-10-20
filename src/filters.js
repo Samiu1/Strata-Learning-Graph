@@ -23,7 +23,6 @@ export function createFilterController({
   const agePresets = document.getElementById('age-presets');
   const subjectChipsContainer = document.getElementById('subject-chips');
   const btnSelectAllSubjects = document.getElementById('btn-select-all-subjects');
-  const domainSelect = document.getElementById('domain-select');
   const sortSelect = document.getElementById('sort-select');
   const btnResetFilters = document.getElementById('btn-reset-filters');
   const btnEmptyReset = document.getElementById('btn-empty-reset');
@@ -32,7 +31,6 @@ export function createFilterController({
   function init() {
     setupEvents();
     renderSubjectChips();
-    updateDomainOptions();
   }
 
   function setupEvents() {
@@ -85,12 +83,6 @@ export function createFilterController({
     btnSelectAllSubjects.addEventListener('click', () => {
       filterState.selectedSubjects = new Set(Object.keys(subjectColors));
       updateSubjectChipsActiveState();
-      updateDomainOptions();
-      onFilterChange();
-    });
-
-    domainSelect.addEventListener('change', () => {
-      filterState.selectedDomain = domainSelect.value;
       onFilterChange();
     });
 
@@ -154,7 +146,6 @@ export function createFilterController({
           filterState.selectedSubjects.add(subject);
         }
         updateSubjectChipsActiveState();
-        updateDomainOptions();
         onFilterChange();
       });
 
@@ -168,30 +159,6 @@ export function createFilterController({
     });
   }
 
-  function updateDomainOptions() {
-    const domains = new Set();
-    allTopics.forEach(t => {
-      if (filterState.selectedSubjects.has(t.subject)) {
-        domains.add(t.domain);
-      }
-    });
-
-    const sortedDomains = Array.from(domains).sort();
-    const currentDomain = filterState.selectedDomain;
-
-    domainSelect.innerHTML = '<option value="">All Domains</option>';
-    sortedDomains.forEach(dom => {
-      const opt = document.createElement('option');
-      opt.value = dom;
-      opt.textContent = dom;
-      if (dom === currentDomain) opt.selected = true;
-      domainSelect.appendChild(opt);
-    });
-
-    if (!domains.has(currentDomain)) {
-      filterState.selectedDomain = '';
-    }
-  }
 
   function updateActiveFilterTags() {
     activeFilterTags.innerHTML = '';
@@ -208,13 +175,6 @@ export function createFilterController({
         ageMinInput.value = 4;
         ageMaxInput.value = 15;
         syncAgeFilters();
-      });
-    }
-    if (filterState.selectedDomain) {
-      addTag(`Domain: ${filterState.selectedDomain}`, () => {
-        filterState.selectedDomain = '';
-        domainSelect.value = '';
-        onFilterChange();
       });
     }
   }
@@ -247,8 +207,6 @@ export function createFilterController({
     updateSubjectChipsActiveState();
 
     filterState.selectedDomain = '';
-    domainSelect.value = '';
-    updateDomainOptions();
 
     filterState.sortBy = 'age-asc';
     sortSelect.value = 'age-asc';
