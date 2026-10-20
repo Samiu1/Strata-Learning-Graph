@@ -144,9 +144,6 @@ html, body {
   width: 100%; padding: 0.5rem 0.75rem; font-family: var(--font-main); font-size: 0.825rem;
   background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 6px; outline: none;
 }
-.type-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-.type-chip { padding: 0.3rem 0.55rem; font-size: 0.725rem; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 4px; color: var(--text-muted); cursor: pointer; }
-.type-chip.active { background: rgba(59, 130, 246, 0.2); border-color: #3b82f6; color: #93c5fd; font-weight: 600; }
 
 /* Content Area */
 .content-area {

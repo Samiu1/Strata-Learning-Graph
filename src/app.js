@@ -165,14 +165,13 @@ function setView(view) {
 }
 
 function applyFilters() {
-  const { query, minAge, maxAge, selectedSubjects, selectedDomain, selectedType, sortBy } = filterController.getState();
+  const { query, minAge, maxAge, selectedSubjects, selectedDomain, sortBy } = filterController.getState();
 
   filteredTopics = allTopics.filter(t => {
     if (query && !t._searchTokens.includes(query)) return false;
     if (t.ageRangeEnd < minAge || t.ageRangeStart > maxAge) return false;
     if (!selectedSubjects.has(t.subject)) return false;
     if (selectedDomain && t.domain !== selectedDomain) return false;
-    if (selectedType !== 'ALL' && t.type !== selectedType) return false;
     return true;
   });
 

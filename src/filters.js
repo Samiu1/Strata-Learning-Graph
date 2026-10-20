@@ -10,7 +10,6 @@ export function createFilterController({
     maxAge: 15,
     selectedSubjects: new Set(Object.keys(subjectColors)),
     selectedDomain: '',
-    selectedType: 'ALL',
     sortBy: 'age-asc'
   };
 
@@ -25,7 +24,6 @@ export function createFilterController({
   const subjectChipsContainer = document.getElementById('subject-chips');
   const btnSelectAllSubjects = document.getElementById('btn-select-all-subjects');
   const domainSelect = document.getElementById('domain-select');
-  const typeChipsContainer = document.getElementById('type-chips');
   const sortSelect = document.getElementById('sort-select');
   const btnResetFilters = document.getElementById('btn-reset-filters');
   const btnEmptyReset = document.getElementById('btn-empty-reset');
@@ -94,15 +92,6 @@ export function createFilterController({
     domainSelect.addEventListener('change', () => {
       filterState.selectedDomain = domainSelect.value;
       onFilterChange();
-    });
-
-    typeChipsContainer.querySelectorAll('.type-chip').forEach(btn => {
-      btn.addEventListener('click', () => {
-        typeChipsContainer.querySelectorAll('.type-chip').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        filterState.selectedType = btn.dataset.type;
-        onFilterChange();
-      });
     });
 
     sortSelect.addEventListener('change', () => {
@@ -228,15 +217,6 @@ export function createFilterController({
         onFilterChange();
       });
     }
-    if (filterState.selectedType !== 'ALL') {
-      addTag(`Type: ${filterState.selectedType}`, () => {
-        filterState.selectedType = 'ALL';
-        typeChipsContainer.querySelectorAll('.type-chip').forEach(b => {
-          b.classList.toggle('active', b.dataset.type === 'ALL');
-        });
-        onFilterChange();
-      });
-    }
   }
 
   function addTag(label, onRemove) {
@@ -269,11 +249,6 @@ export function createFilterController({
     filterState.selectedDomain = '';
     domainSelect.value = '';
     updateDomainOptions();
-
-    filterState.selectedType = 'ALL';
-    typeChipsContainer.querySelectorAll('.type-chip').forEach(b => {
-      b.classList.toggle('active', b.dataset.type === 'ALL');
-    });
 
     filterState.sortBy = 'age-asc';
     sortSelect.value = 'age-asc';
