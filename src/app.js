@@ -247,6 +247,7 @@ function renderCards(resetScroll = false) {
     const color = getSubjectColor(topic.subject);
     const prereqCount = prereqsMap.get(topic.id)?.length || 0;
     const unlockCount = unlocksMap.get(topic.id)?.length || 0;
+    const centralityPercent = Math.round((topic.centrality || 0) * 100);
 
     card.innerHTML = `
       <div class="card-top">
@@ -265,8 +266,8 @@ function renderCards(resetScroll = false) {
         <span class="card-stat-pill" title="Topics unlocked">
           <strong>${unlockCount}</strong> unlocks
         </span>
-        <span class="card-stat-pill" title="Graph centrality score">
-          Key: <strong>${Math.round((topic.centrality || 0) * 100)}%</strong>
+        <span class="card-stat-pill" title="${centralityPercent}% of topics depend on this one.">
+          Centrality: <strong>${centralityPercent}%</strong>
         </span>
       </div>
     `;
