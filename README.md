@@ -1,17 +1,36 @@
-# Marble Skill Taxonomy
+# Strata Learning Graph
 
-An open, structured taxonomy of **what children learn** across the primary/elementary years — decomposed into fine-grained "micro-topics", wired into a prerequisite graph, and aligned to national curriculum standards. Produced by [Marble](https://withmarble.com).
+An interactive explorer and structured taxonomy of **what children learn** across primary/elementary years — decomposed into fine-grained micro-topics, connected in a prerequisite dependency graph, and aligned to national curriculum standards.
 
-> **Version:** `v1` · **Topics:** 1,591 · **Prerequisite edges:** 3,225 · **Subjects:** 8
+> **Project Fork:** Forked from the [Marble Skill Taxonomy](https://github.com/withmarbleapp/os-taxonomy) by [Marble](https://withmarble.com).  
+> **Attribution:** Marble Skill Taxonomy (v1) · © Generative Spark, Inc. (Marble) · [withmarble.com](https://withmarble.com) · licensed under [ODbL 1.0](LICENSE) (database) and [CC BY-SA 4.0](LICENSE-CONTENT) (content).  
+> **Stats:** `v1` · **1,591 Topics** · **3,225 Prerequisite Edges** · **8 Subjects**
 
-## See it
+---
 
-![The taxonomy as a rotating 3D graph: every dot a micro-topic, colored by subject, wired by prerequisites](media/curriculum-viz.gif)
+## Interactive UI Explorer
 
-Every dot is a micro-topic, colored by subject; height is age; each thread is a prerequisite ([full-quality video](media/curriculum-viz.mp4)). Explore it interactively at [withmarble.com/curriculum](https://withmarble.com/curriculum) — tap any concept to trace everything a learner must master before it.
+This repository includes a standalone web explorer to interactively browse topics, filter by age/subject, trace prerequisite paths, and inspect diagnostic assessment prompts.
 
+### Running Locally
 
-## What this is
+```bash
+# Start the local UI server (no heavy dependencies, pure Node.js)
+npm run ui
+```
+
+Then open your browser to **`http://localhost:3000`**.
+
+### UI Features
+
+- **Fast Multi-Filter Search:** Filter dynamically by age range (4–15), subjects, domains, and knowledge types (conceptual, procedural, representational, language, meta).
+- **Prerequisite Pathways:** Click any topic card to open the detail drawer and inspect prerequisite concepts ("Must Learn First") and outgoing dependencies ("Unlocks Next").
+- **Interactive Graph View:** Switch to the 2D/3D DAG canvas view to visualize topic connectivity and clusters.
+- **Diagnostic Prompts:** Test concept mastery with customizable diagnostic questions.
+
+---
+
+## Dataset Overview
 
 Most curriculum data is either a flat list of standards or locked inside a product. This dataset is a **connected graph of learning**:
 
@@ -23,29 +42,29 @@ Most curriculum data is either a flat list of standards or locked inside a produ
 
 ### Subjects
 
-| Subject | Topics |
-|---|---:|
-| Science | 547 |
-| Mathematics | 504 |
-| English | 286 |
-| History | 90 |
-| Personal & Social Development | 88 |
-| Life Skills | 37 |
-| Computing | 21 |
-| Learning to Learn | 18 |
+| Subject                       | Topics |
+| ----------------------------- | -----: |
+| Science                       |    547 |
+| Mathematics                   |    504 |
+| English                       |    286 |
+| History                       |     90 |
+| Personal & Social Development |     88 |
+| Life Skills                   |     37 |
+| Computing                     |     21 |
+| Learning to Learn             |     18 |
 
 ## Files
 
 All data lives in [`data/`](data/) as UTF-8 JSON. See [`schema/`](schema/) for JSON Schemas and [`manifest.json`](data/manifest.json) for counts + SHA-256 checksums.
 
-| File | What it holds |
-|---|---|
-| [`data/topics.json`](data/topics.json) | The micro-topics (graph **nodes**). |
-| [`data/dependencies.json`](data/dependencies.json) | Prerequisite **edges** (`topicId` depends on `prerequisiteId`). |
-| [`data/curriculum-standards.json`](data/curriculum-standards.json) | The source curriculum standards, grouped by curriculum. |
-| [`data/clusters.json`](data/clusters.json) | Parent-friendly domain summaries. |
-| [`data/teaching-research.json`](data/teaching-research.json) | Teaching research joined by `topicId`, with explicit coverage and publication notes (~24 MB). |
-| [`data/manifest.json`](data/manifest.json) | Counts, per-subject breakdown, per-file checksums. |
+| File                                                                | What it holds                                                                                   |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| [`data/topics.json`](data/topics.json)                             | The micro-topics (graph **nodes**).                                                       |
+| [`data/dependencies.json`](data/dependencies.json)                 | Prerequisite **edges** (`topicId` depends on `prerequisiteId`).                       |
+| [`data/curriculum-standards.json`](data/curriculum-standards.json) | The source curriculum standards, grouped by curriculum.                                         |
+| [`data/clusters.json`](data/clusters.json)                         | Parent-friendly domain summaries.                                                               |
+| [`data/teaching-research.json`](data/teaching-research.json)       | Teaching research joined by `topicId`, with explicit coverage and publication notes (~24 MB). |
+| [`data/manifest.json`](data/manifest.json)                         | Counts, per-subject breakdown, per-file checksums.                                              |
 
 ### A topic
 
@@ -93,16 +112,16 @@ about whether a topic can be taught.
 The file has `schemaVersion: 1` and taxonomy `version: "v1"`. Each `records[]`
 entry joins `topics.json` through `topicId` and contains:
 
-| Field | Meaning |
-|---|---|
-| `pedagogy` | Original teaching summary, practices, representations and misconceptions. |
-| `learn` | Portable learning guidance (`schemaVersion: 2`): a summary, activities, educational constraints and review notes. |
+| Field                  | Meaning                                                                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `pedagogy`           | Original teaching summary, practices, representations and misconceptions.                                                       |
+| `learn`              | Portable learning guidance (`schemaVersion: 2`): a summary, activities, educational constraints and review notes.             |
 | `learn.activities[]` | Learner actions, intended insight, feedback, rationale and supporting source claims. No product artifact types or fit rankings. |
-| `assess` | Original diagnostic/task, response levels, error patterns and next teaching moves; nullable in the public interface. |
-| `sources` | Claim, named source, optional URL and the original author's verification flag. |
-| `confidence` | Original authoring confidence; not an independent quality score. |
-| `provenance` | Original authoring model and source record timestamps. The update timestamp also reflects the learning-guidance rewrite. |
-| `publicationNotes` | Paths and curriculum codes for text omitted under the codes-only publication policy. |
+| `assess`             | Original diagnostic/task, response levels, error patterns and next teaching moves; nullable in the public interface.            |
+| `sources`            | Claim, named source, optional URL and the original author's verification flag.                                                  |
+| `confidence`         | Original authoring confidence; not an independent quality score.                                                                |
+| `provenance`         | Original authoring model and source record timestamps. The update timestamp also reflects the learning-guidance rewrite.        |
+| `publicationNotes`   | Paths and curriculum codes for text omitted under the codes-only publication policy.                                            |
 
 `sourceClaims` exactly match `sources[].claim` after publication transformations.
 A source may support a general principle or curriculum alignment; this does not
@@ -172,11 +191,11 @@ node --test scripts/teaching-research.test.mjs
 
 This dataset is **multi-licensed** — read this before you use or redistribute it.
 
-| Layer | License |
-|---|---|
-| **The database** — the collection, structure, IDs, topic↔topic and topic↔standard relationships | [**ODbL 1.0**](LICENSE) — free for research **and** commercial use, **attribution** required, **share-alike** (derivative *databases* must stay open under ODbL). |
-| **The textual content Marble authored** — topic `description`/`name`/`evidence`/`assessmentPrompt`, dependency `reason`s, cluster `summary`s, original teaching-research prose | [**CC BY-SA 4.0**](LICENSE-CONTENT) — same spirit: attribution + share-alike. |
-| **`curriculum-standards.json`** — extracted from third-party frameworks | **Not** Marble's to relicense. Each source is under **its own upstream license** — see [**PROVENANCE.md**](PROVENANCE.md). |
+| Layer                                                                                                                                                                                             | License                                                                                                                                                                                     |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **The database** — the collection, structure, IDs, topic↔topic and topic↔standard relationships                                                                                          | [**ODbL 1.0**](LICENSE) — free for research **and** commercial use, **attribution** required, **share-alike** (derivative *databases* must stay open under ODbL). |
+| **The textual content Marble authored** — topic `description`/`name`/`evidence`/`assessmentPrompt`, dependency `reason`s, cluster `summary`s, original teaching-research prose | [**CC BY-SA 4.0**](LICENSE-CONTENT) — same spirit: attribution + share-alike.                                                                                                         |
+| **`curriculum-standards.json`** — extracted from third-party frameworks                                                                                                                  | **Not** Marble's to relicense. Each source is under **its own upstream license** — see [**PROVENANCE.md**](PROVENANCE.md).                                                |
 
 **Why share-alike + still commercial-friendly:** ODbL distinguishes a *derivative database* (extend/modify the taxonomy → must stay open) from a *produced work* (use it inside a product, model, or app → stays yours). So you can build a commercial product on this without open-sourcing your product; you only owe back improvements to the *taxonomy itself*.
 
@@ -184,7 +203,7 @@ This dataset is **multi-licensed** — read this before you use or redistribute 
 
 Any use must credit:
 
-> Marble Skill Taxonomy (v1) · © Generative Spark, Inc. (Marble) · https://withmarble.com · licensed under ODbL 1.0 (database) and CC BY-SA 4.0 (content).
+> Marble Skill Taxonomy (v1) · © Generative Spark, Inc. (Marble) · [withmarble.com](https://withmarble.com) · licensed under [ODbL 1.0](LICENSE) (database) and [CC BY-SA 4.0](LICENSE-CONTENT) (content).
 
 Plus the upstream notices in [PROVENANCE.md](PROVENANCE.md) for any curriculum standards you use. See [CITATION.cff](CITATION.cff) for a formal citation.
 
