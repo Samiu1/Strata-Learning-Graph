@@ -189,12 +189,24 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
         ${dep.reason ? `<div class="dep-item-reason">${escapeHtml(dep.reason)}</div>` : ''}
       `;
 
-      div.addEventListener('click', () => {
-        if (targetTopic) {
+      if (targetTopic) {
+        div.tabIndex = 0;
+        div.setAttribute('role', 'button');
+        div.setAttribute('aria-label', `Navigate to ${topicName}`);
+
+        const activate = () => {
           open(targetTopic, true);
           if (onSelectTopic) onSelectTopic(targetTopic);
-        }
-      });
+        };
+
+        div.addEventListener('click', activate);
+        div.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            activate();
+          }
+        });
+      }
 
       container.appendChild(div);
     });

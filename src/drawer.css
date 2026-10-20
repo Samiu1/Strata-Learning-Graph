@@ -166,6 +166,19 @@
   background: #1a233a;
 }
 
+.dep-item:focus-visible {
+  outline: none;
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.4);
+  background: #1a233a;
+}
+
+.drawer-nav-btn:focus-visible,
+.drawer-close-btn:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 2px;
+}
+
 .dep-item-top {
   display: flex;
   align-items: center;

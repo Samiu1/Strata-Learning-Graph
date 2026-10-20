@@ -112,6 +112,13 @@ function handleSelectTopic(topic) {
   currentFocusTopic = topic;
   detailController.open(topic, true);
 
+  // Sync selected card state in cards view
+  document.querySelectorAll('.topic-card').forEach(c => {
+    const isTarget = c.dataset.id === topic.id;
+    c.classList.toggle('selected', isTarget);
+    c.setAttribute('aria-pressed', isTarget ? 'true' : 'false');
+  });
+
   if (currentView === 'graph') {
     graphVisualizer.setGraphData({
       filteredTopics,
@@ -124,7 +131,10 @@ function handleSelectTopic(topic) {
 
 function handleResetFocus() {
   currentFocusTopic = null;
-  document.querySelectorAll('.topic-card.selected').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.topic-card.selected').forEach(c => {
+    c.classList.remove('selected');
+    c.setAttribute('aria-pressed', 'false');
+  });
 
   graphVisualizer.setGraphData({
     filteredTopics,
@@ -239,14 +249,23 @@ function renderCards(resetScroll = false) {
     const card = document.createElement('article');
     card.className = 'topic-card';
     card.dataset.id = topic.id;
-    if (currentFocusTopic && currentFocusTopic.id === topic.id) {
+    card.tabIndex = 0;
+    card.setAttribute('role', 'button');
+    const isSelected = Boolean(currentFocusTopic && currentFocusTopic.id === topic.id);
+    if (isSelected) {
       card.classList.add('selected');
     }
+    card.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
 
     const color = getSubjectColor(topic.subject);
     const prereqCount = prereqsMap.get(topic.id)?.length || 0;
     const unlockCount = unlocksMap.get(topic.id)?.length || 0;
     const centralityPercent = Math.round((topic.centrality || 0) * 100);
+
+    card.setAttribute(
+      'aria-label',
+      `${topic.name}. ${topic.subject}, Ages ${topic.ageRangeStart} to ${topic.ageRangeEnd}. ${prereqCount} prerequisites, ${unlockCount} unlocks.`
+    );
 
     card.innerHTML = `
       <div class="card-top">
@@ -271,10 +290,22 @@ function renderCards(resetScroll = false) {
       </div>
     `;
 
-    card.addEventListener('click', () => {
-      document.querySelectorAll('.topic-card.selected').forEach(c => c.classList.remove('selected'));
+    const selectCard = () => {
+      document.querySelectorAll('.topic-card.selected').forEach(c => {
+        c.classList.remove('selected');
+        c.setAttribute('aria-pressed', 'false');
+      });
       card.classList.add('selected');
+      card.setAttribute('aria-pressed', 'true');
       handleSelectTopic(topic);
+    };
+
+    card.addEventListener('click', selectCard);
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        selectCard();
+      }
     });
 
     frag.appendChild(card);
