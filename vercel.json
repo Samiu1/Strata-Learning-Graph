@@ -2,6 +2,11 @@
   "cleanUrls": true,
   "rewrites": [
     { "source": "/", "destination": "/src/index.html" },
-    { "source": "/((?!data/|media/|src/).*)", "destination": "/src/$1" }
+    { "source": "/style.css", "destination": "/src/style.css" },
+    { "source": "/drawer.css", "destination": "/src/drawer.css" },
+    { "source": "/app.js", "destination": "/src/app.js" },
+    { "source": "/detail.js", "destination": "/src/detail.js" },
+    { "source": "/filters.js", "destination": "/src/filters.js" },
+    { "source": "/graph.js", "destination": "/src/graph.js" }
   ]
 }
