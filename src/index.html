@@ -159,9 +159,6 @@
             <span class="count-badge" id="filtered-count">Loading topics...</span>
             <div class="active-filter-tags" id="active-filter-tags"></div>
           </div>
-          <div class="results-help">
-            <span class="keyboard-tip">Tip: Click any topic card to inspect prerequisite paths</span>
-          </div>
         </div>
 
         <!-- Cards View -->
@@ -203,95 +200,95 @@
           </div>
           <div class="graph-legend" id="graph-legend"></div>
         </div>
-      </main>
-    </div>
 
-    <!-- Topic Inspector Drawer -->
-    <div class="detail-drawer-backdrop" id="drawer-backdrop"></div>
-    <aside class="detail-drawer" id="detail-drawer" aria-label="Topic details inspector">
-      <div class="drawer-header">
-        <div class="drawer-header-left">
-          <button class="drawer-nav-btn" id="drawer-btn-back" title="Go back to previous topic" disabled>
-            ← Back
-          </button>
-          <span class="drawer-id-badge" id="drawer-topic-id">mt_...</span>
-        </div>
-        <button class="drawer-close-btn" id="drawer-btn-close" aria-label="Close inspector">×</button>
-      </div>
-
-      <div class="drawer-content" id="drawer-content">
-        <!-- Topic Title & Tags -->
-        <div class="drawer-top-section">
-          <div class="drawer-badges">
-            <span class="subject-badge" id="drawer-subject">Science</span>
-            <span class="domain-badge" id="drawer-domain">Physics</span>
-            <span class="age-badge" id="drawer-age">Ages 5–7</span>
-            <span class="type-badge" id="drawer-type">CONCEPTUAL</span>
+        <!-- Topic Inspector Drawer -->
+        <div class="detail-drawer-backdrop" id="drawer-backdrop"></div>
+        <aside class="detail-drawer" id="detail-drawer" aria-label="Topic details inspector">
+          <div class="drawer-header">
+            <div class="drawer-header-left">
+              <button class="drawer-nav-btn" id="drawer-btn-back" title="Go back to previous topic" disabled>
+                ← Back
+              </button>
+              <span class="drawer-id-badge" id="drawer-topic-id">mt_...</span>
+            </div>
+            <button class="drawer-close-btn" id="drawer-btn-close" aria-label="Close inspector">×</button>
           </div>
-          <h2 class="drawer-title" id="drawer-title">Topic Title</h2>
-          <p class="drawer-desc" id="drawer-desc">Topic description goes here...</p>
-        </div>
 
-        <!-- Domain Summary Cluster -->
-        <div class="drawer-section" id="drawer-cluster-box" style="display: none;">
-          <h4 class="section-heading">Parent & Domain Context</h4>
-          <p class="cluster-text" id="drawer-cluster-text"></p>
-        </div>
+          <div class="drawer-content" id="drawer-content">
+            <!-- Topic Title & Tags -->
+            <div class="drawer-top-section">
+              <div class="drawer-badges">
+                <span class="subject-badge" id="drawer-subject">Science</span>
+                <span class="domain-badge" id="drawer-domain">Physics</span>
+                <span class="age-badge" id="drawer-age">Ages 5–7</span>
+                <span class="type-badge" id="drawer-type">CONCEPTUAL</span>
+              </div>
+              <h2 class="drawer-title" id="drawer-title">Topic Title</h2>
+              <p class="drawer-desc" id="drawer-desc">Topic description goes here...</p>
+            </div>
 
-        <!-- Interactive Prerequisite Pathway View -->
-        <div class="drawer-section">
-          <div class="section-title-split">
-            <h4 class="section-heading">Prerequisites ("Must Learn First")</h4>
-            <span class="count-pill" id="drawer-prereqs-count">0</span>
-          </div>
-          <p class="section-subtext">Concepts that must be mastered before studying this topic.</p>
-          <div class="dep-list" id="drawer-prereqs-list"></div>
-        </div>
+            <!-- Domain Summary Cluster -->
+            <div class="drawer-section" id="drawer-cluster-box" style="display: none;">
+              <h4 class="section-heading">Parent & Domain Context</h4>
+              <p class="cluster-text" id="drawer-cluster-text"></p>
+            </div>
 
-        <!-- Outgoing Dependencies -->
-        <div class="drawer-section">
-          <div class="section-title-split">
-            <h4 class="section-heading">Unlocks Next ("Gateway To")</h4>
-            <span class="count-pill" id="drawer-unlocks-count">0</span>
-          </div>
-          <p class="section-subtext">Topics that depend directly on mastering this concept.</p>
-          <div class="dep-list" id="drawer-unlocks-list"></div>
-        </div>
+            <!-- Interactive Prerequisite Pathway View -->
+            <div class="drawer-section">
+              <div class="section-title-split">
+                <h4 class="section-heading">Prerequisites ("Must Learn First")</h4>
+                <span class="count-pill" id="drawer-prereqs-count">0</span>
+              </div>
+              <p class="section-subtext">Concepts that must be mastered before studying this topic.</p>
+              <div class="dep-list" id="drawer-prereqs-list"></div>
+            </div>
 
-        <!-- Mastery Evidence -->
-        <div class="drawer-section">
-          <h4 class="section-heading">Mastery Evidence Criteria</h4>
-          <ul class="evidence-list" id="drawer-evidence-list"></ul>
-        </div>
+            <!-- Outgoing Dependencies -->
+            <div class="drawer-section">
+              <div class="section-title-split">
+                <h4 class="section-heading">Unlocks Next ("Gateway To")</h4>
+                <span class="count-pill" id="drawer-unlocks-count">0</span>
+              </div>
+              <p class="section-subtext">Topics that depend directly on mastering this concept.</p>
+              <div class="dep-list" id="drawer-unlocks-list"></div>
+            </div>
 
-        <!-- Assessment Prompt with Child Name Customization -->
-        <div class="drawer-section">
-          <div class="section-title-split">
-            <h4 class="section-heading">Diagnostic Assessment Prompt</h4>
-            <div class="child-name-input-wrap">
-              <label for="child-name-input">Child:</label>
-              <input type="text" id="child-name-input" value="Aidan" maxlength="20" placeholder="Name">
+            <!-- Mastery Evidence -->
+            <div class="drawer-section">
+              <h4 class="section-heading">Mastery Evidence Criteria</h4>
+              <ul class="evidence-list" id="drawer-evidence-list"></ul>
+            </div>
+
+            <!-- Assessment Prompt with Child Name Customization -->
+            <div class="drawer-section">
+              <div class="section-title-split">
+                <h4 class="section-heading">Diagnostic Assessment Prompt</h4>
+                <div class="child-name-input-wrap">
+                  <label for="child-name-input">Child:</label>
+                  <input type="text" id="child-name-input" value="Aidan" maxlength="20" placeholder="Name">
+                </div>
+              </div>
+              <div class="prompt-box" id="drawer-prompt-box">
+                <p class="prompt-text" id="drawer-prompt-text"></p>
+              </div>
+            </div>
+
+            <!-- Linked Standards -->
+            <div class="drawer-section">
+              <h4 class="section-heading">Curriculum Standards</h4>
+              <div class="standards-list" id="drawer-standards-list"></div>
+            </div>
+
+            <!-- Data Attribution -->
+            <div class="drawer-section drawer-attribution">
+              <p class="drawer-attribution-text">
+                Marble Skill Taxonomy (v1) · © Generative Spark, Inc. (Marble) · <a href="https://withmarble.com" target="_blank" rel="noopener noreferrer">withmarble.com</a> · licensed under <a href="https://github.com/withmarbleapp/os-taxonomy/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">ODbL 1.0</a> (database) and <a href="https://github.com/withmarbleapp/os-taxonomy/blob/main/LICENSE-CONTENT" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a> (content).
+              </p>
             </div>
           </div>
-          <div class="prompt-box" id="drawer-prompt-box">
-            <p class="prompt-text" id="drawer-prompt-text"></p>
-          </div>
-        </div>
-
-        <!-- Linked Standards -->
-        <div class="drawer-section">
-          <h4 class="section-heading">Curriculum Standards</h4>
-          <div class="standards-list" id="drawer-standards-list"></div>
-        </div>
-
-        <!-- Data Attribution -->
-        <div class="drawer-section drawer-attribution">
-          <p class="drawer-attribution-text">
-            Marble Skill Taxonomy (v1) · © Generative Spark, Inc. (Marble) · <a href="https://withmarble.com" target="_blank" rel="noopener noreferrer">withmarble.com</a> · licensed under <a href="https://github.com/withmarbleapp/os-taxonomy/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">ODbL 1.0</a> (database) and <a href="https://github.com/withmarbleapp/os-taxonomy/blob/main/LICENSE-CONTENT" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a> (content).
-          </p>
-        </div>
-      </div>
-    </aside>
+        </aside>
+      </main>
+    </div>
   </div>
 
   <script type="module" src="app.js"></script>
