@@ -1,0 +1,7 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/", "destination": "/src/index.html" },
+    { "source": "/((?!data/|media/|src/).*)", "destination": "/src/$1" }
+  ]
+}
