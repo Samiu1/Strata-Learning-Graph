@@ -101,7 +101,6 @@ async function init() {
 
     filterController.init();
     setupViewEvents();
-    renderGraphLegend();
     applyFilters();
   } catch (err) {
     console.error('Initialization error:', err);
@@ -292,16 +291,6 @@ function renderCards(resetScroll = false) {
   }
 }
 
-function renderGraphLegend() {
-  const legend = document.getElementById('graph-legend');
-  legend.innerHTML = '';
-  Object.entries(SUBJECT_COLORS).forEach(([subj, col]) => {
-    const item = document.createElement('div');
-    item.className = 'legend-item';
-    item.innerHTML = `<span style="width: 8px; height: 8px; border-radius: 50%; background: ${col}; display: inline-block;"></span><span>${subj}</span>`;
-    legend.appendChild(item);
-  });
-}
 
 function escapeHtml(str) {
   if (!str) return '';

@@ -251,21 +251,6 @@ html, body {
   position: absolute; pointer-events: none; background: rgba(10, 13, 22, 0.95); border: 1px solid #334155;
   border-radius: 8px; padding: 0.6rem 0.85rem; font-size: 0.75rem; color: #fff; z-index: 20; box-shadow: 0 8px 24px rgba(0,0,0,0.6); max-width: 290px;
 }
-.graph-legend {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 1.25rem;
-  background: rgba(14, 19, 31, 0.75);
-  border-top: 1px solid var(--border-subtle);
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  font-size: 0.7rem;
-}
-.graph-legend::-webkit-scrollbar { display: none; }
-.legend-item { display: flex; align-items: center; gap: 0.35rem; white-space: nowrap; }
 
 @media (max-width: 900px) {
   .app-layout { flex-direction: column; }
