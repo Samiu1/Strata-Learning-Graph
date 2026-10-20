@@ -378,9 +378,9 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
 
     if (lineage && selectedId) {
       if (node.topic.id === selectedId) {
-        relTag = '<div style="color: #ffffff; font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; letter-spacing: 0.03em;">★ SELECTED TOPIC</div>';
+        relTag = '<div style="color: #ffffff; font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; letter-spacing: 0.03em;">★ SELECTED</div>';
       } else if (lineage.directPrereqNodes.has(node.idx)) {
-        relTag = '<div style="color: #f59e0b; font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; letter-spacing: 0.03em;">🟡 DIRECT PREREQUISITE (Must Learn First)</div>';
+        relTag = '<div style="color: #f59e0b; font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; letter-spacing: 0.03em;">🟡 DIRECT PREREQUISITE</div>';
         const edge = edges.find(e => e.sourceIdx === lineage.targetIdx && e.targetIdx === node.idx);
         if (edge && edge.reason) {
           reasonText = `<div style="margin-top: 5px; padding-top: 5px; border-top: 1px dashed rgba(245, 158, 11, 0.35); font-size: 0.72rem; color: #fde68a; font-style: italic;">"${escapeHtml(edge.reason)}"</div>`;
@@ -388,13 +388,13 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       } else if (lineage.prereqNodes.has(node.idx)) {
         relTag = '<div style="color: #fde68a; font-size: 0.7rem; font-weight: 600; margin-bottom: 3px;">🟡 SECONDARY PREREQUISITE (Ancestor requirement)</div>';
       } else if (lineage.directUnlockNodes.has(node.idx)) {
-        relTag = '<div style="color: #38bdf8; font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; letter-spacing: 0.03em;">🔵 DIRECT UNLOCK (Gateway To)</div>';
+        relTag = '<div style="color: #38bdf8; font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; letter-spacing: 0.03em;">🔵 DIRECT UNLOCK</div>';
         const edge = edges.find(e => e.targetIdx === lineage.targetIdx && e.sourceIdx === node.idx);
         if (edge && edge.reason) {
           reasonText = `<div style="margin-top: 5px; padding-top: 5px; border-top: 1px dashed rgba(56, 189, 248, 0.35); font-size: 0.72rem; color: #bae6fd; font-style: italic;">"${escapeHtml(edge.reason)}"</div>`;
         }
       } else if (lineage.unlockNodes.has(node.idx)) {
-        relTag = '<div style="color: #bae6fd; font-size: 0.7rem; font-weight: 600; margin-bottom: 3px;">🔵 SECONDARY UNLOCK (Descendant pathway)</div>';
+        relTag = '<div style="color: #bae6fd; font-size: 0.7rem; font-weight: 600; margin-bottom: 3px;">🔵 SECONDARY UNLOCK </div>';
       }
     }
 
@@ -823,11 +823,11 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
 
       // Draw clear pill badges for immediate connections without clumping
       if (isSelected) {
-        drawNodeBadge(n.topic.name, '★ SELECTED TOPIC', sx, sy, r, '#ffffff', '#ffffff', 'rgba(255, 255, 255, 0.9)');
+        drawNodeBadge(n.topic.name, '★ SELECTED', sx, sy, r, '#ffffff', '#ffffff', 'rgba(255, 255, 255, 0.9)');
       } else if (isDirectPrereq) {
-        drawNodeBadge(n.topic.name, '🟡 MUST LEARN FIRST', sx, sy, r, '#f59e0b', '#fde68a', '#f59e0b');
+        drawNodeBadge(n.topic.name, '🟡 PREREQUISITE', sx, sy, r, '#f59e0b', '#fde68a', '#f59e0b');
       } else if (isDirectUnlock) {
-        drawNodeBadge(n.topic.name, '🔵 UNLOCKS NEXT', sx, sy, r, '#38bdf8', '#bae6fd', '#38bdf8');
+        drawNodeBadge(n.topic.name, '🔵 UNLOCKS', sx, sy, r, '#38bdf8', '#bae6fd', '#38bdf8');
       }
     }
     ctx.globalAlpha = 1.0;

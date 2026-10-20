@@ -2,9 +2,9 @@
 
 An interactive explorer and structured taxonomy of **what children learn** across primary/elementary years — decomposed into fine-grained micro-topics, connected in a prerequisite dependency graph, and aligned to national curriculum standards.
 
-> **Created by:** [Samiul Islam](https://www.linkedin.com/in/samiulislam/)  
-> **Project Fork:** Forked from the [Marble Skill Taxonomy](https://github.com/withmarbleapp/os-taxonomy) by [Marble](https://withmarble.com).  
-> **Attribution:** Marble Skill Taxonomy (v1) · © Generative Spark, Inc. (Marble) · [withmarble.com](https://withmarble.com) · licensed under [ODbL 1.0](LICENSE) (database) and [CC BY-SA 4.0](LICENSE-CONTENT) (content).  
+> **Created by:** [Samiul Islam](https://www.linkedin.com/in/samiulislam/)
+> **Project Fork:** Forked from the [Marble Skill Taxonomy](https://github.com/withmarbleapp/os-taxonomy) by [Marble](https://withmarble.com).
+> **Attribution:** Marble Skill Taxonomy (v1) · © Generative Spark, Inc. (Marble) · [withmarble.com](https://withmarble.com) · licensed under [ODbL 1.0](LICENSE) (database) and [CC BY-SA 4.0](LICENSE-CONTENT) (content).
 > **Stats:** `v1` · **1,591 Topics** · **3,225 Prerequisite Edges** · **8 Subjects**
 
 ---
