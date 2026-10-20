@@ -271,11 +271,65 @@ html, body {
   .sidebar-filters { width: 100%; max-height: 240px; }
 }
 
+/* Creator Header Badge */
+.creator-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid var(--border-subtle);
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+}
+
+.creator-badge strong {
+  color: #fff;
+}
+
+.creator-badge .linkedin-icon {
+  color: #0a66c2;
+  transition: transform 0.2s ease;
+}
+
+.creator-badge:hover {
+  background: rgba(10, 102, 194, 0.15);
+  border-color: rgba(10, 102, 194, 0.5);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(10, 102, 194, 0.25);
+}
+
+.creator-badge:hover .linkedin-icon {
+  transform: scale(1.1);
+}
+
 /* Sidebar Attribution Notice */
 .sidebar-attribution {
   margin-top: auto;
   padding-top: 1rem;
   border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.creator-credit {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.creator-credit a {
+  color: #38bdf8;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.creator-credit a:hover {
+  text-decoration: underline;
 }
 
 .attribution-text {
