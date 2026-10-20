@@ -15,10 +15,12 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
   const ctx = canvas.getContext('2d');
 
   // Camera State & Centering
+  const SUN_X = 0, SUN_Y = -160, SUN_Z = 0;
+  const GALAXY_CENTER_Y = 0;
   let rotY = 0.65, tilt = -0.52, zoom = 1.05;
   let rotYTarget = null, tiltTarget = null, zoomTarget = null;
-  let camX = 0, camY = 0, camZ = 0;
-  let camXTarget = 0, camYTarget = 0, camZTarget = 0;
+  let camX = SUN_X, camY = GALAXY_CENTER_Y, camZ = SUN_Z;
+  let camXTarget = SUN_X, camYTarget = GALAXY_CENTER_Y, camZTarget = SUN_Z;
   let centroidX = 0, centroidY = 0, centroidZ = 0;
 
   const FOV = 1100, NEAR = FOV * 0.05, H = 720;
@@ -56,23 +58,60 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     new ResizeObserver(() => { if (container.offsetWidth > 0 && container.offsetHeight > 0) resize(); }).observe(container);
   }
 
-  // Pointer Events (Left: Rotate, Middle or Shift+Left: Pan)
+  // Pointer & Touch Events (1-Finger: Rotate, 2-Finger: Pinch Zoom & Pan, Mouse: Left Rotate, Middle/Shift Pan)
+  const activePointers = new Map();
+  let pinchStartDist = 0;
+  let pinchStartZoom = zoom;
+  let pinchStartMidX = 0, pinchStartMidY = 0;
+
   container.addEventListener('pointerdown', (e) => {
     markInteraction();
-    if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
-      e.preventDefault();
-      isPanning = true; hasMoved = false; lastX = e.clientX; lastY = e.clientY;
-      container.style.cursor = 'all-scroll'; container.setPointerCapture(e.pointerId);
-    } else if (e.button === 0) {
-      isDragging = true; hasMoved = false; lastX = e.clientX; lastY = e.clientY;
-      container.setPointerCapture(e.pointerId);
+    activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (activePointers.size === 1) {
+      if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
+        e.preventDefault();
+        isPanning = true; hasMoved = false; lastX = e.clientX; lastY = e.clientY;
+        container.style.cursor = 'all-scroll'; container.setPointerCapture(e.pointerId);
+      } else if (e.button === 0) {
+        isDragging = true; hasMoved = false; lastX = e.clientX; lastY = e.clientY;
+        container.setPointerCapture(e.pointerId);
+      }
+    } else if (activePointers.size === 2) {
+      // Switch from drag to pinch-pan
+      isDragging = false;
+      const pts = Array.from(activePointers.values());
+      pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      pinchStartZoom = zoom;
+      pinchStartMidX = (pts[0].x + pts[1].x) * 0.5;
+      pinchStartMidY = (pts[0].y + pts[1].y) * 0.5;
+      hasMoved = true;
     }
   });
 
   container.addEventListener('auxclick', (e) => { if (e.button === 1) e.preventDefault(); });
 
   container.addEventListener('pointermove', (e) => {
-    if (isPanning) {
+    if (activePointers.has(e.pointerId)) {
+      activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
+
+    if (activePointers.size === 2) {
+      markInteraction();
+      const pts = Array.from(activePointers.values());
+      const currentDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      if (pinchStartDist > 0) {
+        const factor = currentDist / pinchStartDist;
+        zoom = Math.max(0.4, Math.min(3.5, pinchStartZoom * factor));
+        zoomTarget = null;
+      }
+      const midX = (pts[0].x + pts[1].x) * 0.5, midY = (pts[0].y + pts[1].y) * 0.5;
+      const dMidX = midX - pinchStartMidX, dMidY = midY - pinchStartMidY;
+      const panSpeed = (1 / zoom) * 0.9, cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+      camX -= (dMidX * cosY) * panSpeed; camZ -= (dMidX * sinY) * panSpeed; camY += dMidY * panSpeed;
+      camXTarget = camX; camYTarget = camY; camZTarget = camZ;
+      pinchStartMidX = midX; pinchStartMidY = midY;
+    } else if (isPanning) {
       markInteraction();
       const dx = e.clientX - lastX, dy = e.clientY - lastY;
       if (Math.abs(dx) + Math.abs(dy) > 2) hasMoved = true;
@@ -83,7 +122,8 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     } else if (isDragging) {
       markInteraction();
       const dx = e.clientX - lastX, dy = e.clientY - lastY;
-      if (Math.abs(dx) + Math.abs(dy) > 3) hasMoved = true;
+      const slop = e.pointerType === 'touch' ? 12 : 3;
+      if (Math.abs(dx) + Math.abs(dy) > slop) hasMoved = true;
       rotY -= dx * 0.0055; tilt = Math.max(-1.15, Math.min(0.2, tilt - dy * 0.004));
       lastX = e.clientX; lastY = e.clientY;
       rotYTarget = null; tiltTarget = null;
@@ -92,17 +132,25 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     }
   });
 
-  container.addEventListener('pointerup', (e) => {
+  function handlePointerEnd(e) {
     markInteraction();
+    activePointers.delete(e.pointerId);
+
     if (e.button === 1 || isPanning) {
       isPanning = false; container.style.cursor = '';
-    } else if (e.button === 0) {
-      isDragging = false; if (!hasMoved) handleClick(e);
+    } else if (e.button === 0 || e.pointerType === 'touch') {
+      const wasDragging = isDragging;
+      isDragging = false;
+      if (!hasMoved && wasDragging) handleClick(e);
     }
-  });
+  }
+
+  container.addEventListener('pointerup', handlePointerEnd);
+  container.addEventListener('pointercancel', handlePointerEnd);
 
   container.addEventListener('pointerleave', () => {
-    isPanning = false; isDragging = false; container.style.cursor = '';
+    isPanning = false; isDragging = false; activePointers.clear();
+    container.style.cursor = '';
     hoverIdx = -1; hideTooltip();
   });
 
@@ -120,13 +168,20 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     markInteraction();
     selectedId = null; lineage = null; hoverIdx = -1;
     hideTooltip(); resetCamera();
-    statusSubtitle.textContent = `Rotate: Left Drag · Pan: Middle Drag / Shift+Drag · Zoom: Scroll`;
+    statusTitle.textContent = `3D Curriculum Galaxy (${nodes.length.toLocaleString()} topics)`;
+    statusSubtitle.textContent = `Rotate: Drag · Pan: Middle/Shift+Drag · Zoom: Scroll · Click any node to explore connections`;
     if (onResetFocus) onResetFocus();
   });
 
+  function getDefaultZoom() {
+    if (VW < 600 || VH < 450) return 1.25;
+    if (VW < 900 || VH < 600) return 1.15;
+    return 1.05;
+  }
+
   function resetCamera() {
-    rotYTarget = 0.65; tiltTarget = -0.52; zoomTarget = 1.05;
-    camXTarget = centroidX; camYTarget = centroidY; camZTarget = centroidZ;
+    rotYTarget = 0.65; tiltTarget = -0.52; zoomTarget = getDefaultZoom();
+    camXTarget = SUN_X; camYTarget = GALAXY_CENTER_Y; camZTarget = SUN_Z;
   }
 
   // Helper projection for spatial reference markers
@@ -149,8 +204,21 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     const cy = Math.cos(rotY), sy = Math.sin(rotY), ct = Math.cos(tilt), st = Math.sin(tilt);
     const drawer = document.getElementById('detail-drawer');
     const isDrawerOpen = drawer && drawer.classList.contains('open');
-    const cx = (isDrawerOpen && VW > 900) ? (VW - 460) * 0.5 : VW * 0.5;
-    const cyy = VH * 0.5, sc = Math.min(VW / 1400, VH / 1400) * zoom;
+    const isMobile = VW <= 900;
+    let cx = VW * 0.5;
+    let cyy = VH * 0.5;
+
+    if (isDrawerOpen) {
+      if (!isMobile) {
+        // Desktop: drawer occupies right side (~420px)
+        cx = (VW - 420) * 0.5;
+      } else {
+        // Mobile: bottom drawer occupies ~220px in peek mode
+        const drawerH = Math.min(VH * 0.42, drawer.clientHeight || 220);
+        cyy = (VH - drawerH) * 0.5;
+      }
+    }
+    const sc = Math.min(VW / 1400, VH / 1400) * zoom;
 
     for (let i = 0; i < nodes.length; i++) {
       const n = nodes[i];
@@ -174,12 +242,25 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
   }
 
   function pick(mx, my) {
-    let best = -1, minD = 22 * 22;
+    let best = -1, bestScore = -Infinity;
     for (let i = 0; i < nodes.length; i++) {
-      if (P[i * 3 + 2] === 0) continue;
-      const dx = P[i * 3] - mx, dy = P[i * 3 + 1] - my, d = dx * dx + dy * dy;
-      const r = Math.max(12, nodeRadius(i) + 5);
-      if (d < r * r && d < minD) { minD = d; best = i; }
+      const pf = P[i * 3 + 2];
+      if (pf === 0) continue;
+      const dx = P[i * 3] - mx, dy = P[i * 3 + 1] - my;
+      const d = Math.hypot(dx, dy);
+      const isTarget = lineage && i === lineage.targetIdx;
+      const isDirectPrereq = lineage && lineage.directPrereqNodes.has(i);
+      const isDirectUnlock = lineage && lineage.directUnlockNodes.has(i);
+      const isConnected = isTarget || isDirectPrereq || isDirectUnlock;
+
+      const hitR = Math.max(isConnected ? 26 : 14, nodeRadius(i) + (isConnected ? 14 : 6));
+      if (d <= hitR) {
+        const score = (hitR - d) + pf * 25 + (isConnected ? 60 : 0);
+        if (score > bestScore) {
+          bestScore = score;
+          best = i;
+        }
+      }
     }
     return best;
   }
@@ -190,12 +271,15 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     if (idx !== hoverIdx) {
       hoverIdx = idx;
       if (hoverIdx >= 0) {
+        container.style.cursor = 'pointer';
         markInteraction();
         showTooltip(e.clientX - rect.left, e.clientY - rect.top, nodes[hoverIdx]);
       } else {
+        if (!isDragging && !isPanning) container.style.cursor = 'grab';
         hideTooltip();
       }
     } else if (hoverIdx >= 0) {
+      container.style.cursor = 'pointer';
       markInteraction();
       placeTooltip(e.clientX - rect.left, e.clientY - rect.top);
     }
@@ -207,8 +291,9 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     const idx = pick(e.clientX - rect.left, e.clientY - rect.top);
     if (idx < 0) {
       selectedId = null; lineage = null;
-      camXTarget = centroidX; camYTarget = centroidY; camZTarget = centroidZ;
-      statusSubtitle.textContent = `Rotate: Left Drag · Pan: Middle Drag / Shift+Drag · Zoom: Scroll`;
+      camXTarget = SUN_X; camYTarget = GALAXY_CENTER_Y; camZTarget = SUN_Z;
+      statusTitle.textContent = `3D Curriculum Galaxy (${nodes.length.toLocaleString()} topics)`;
+      statusSubtitle.textContent = `Rotate: Drag · Pan: Middle/Shift+Drag · Zoom: Scroll · Click any node to explore connections`;
       if (onResetFocus) onResetFocus();
       return;
     }
@@ -228,7 +313,7 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       const z2 = -n.x * Math.sin(cand) + n.z * Math.cos(cand);
       if (z2 < bestZ) { bestZ = z2; best = cand; }
     }
-    rotYTarget = best; tiltTarget = -0.32; zoomTarget = Math.max(zoom, 1.4);
+    rotYTarget = best; tiltTarget = -0.32; zoomTarget = Math.max(zoom, 1.35);
   }
 
   // Build dual directional lineage: Prerequisites (inbound) and Unlocks (outbound)
@@ -280,32 +365,50 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
 
     const dP = directPrereqNodes.size, sP = prereqNodes.size - dP;
     const dU = directUnlockNodes.size, sU = unlockNodes.size - dU;
-    statusSubtitle.innerHTML = `<span style="color:#f59e0b; font-weight:600;">🟡 ${dP} Direct Prereq${dP===1?'':'s'}${sP > 0 ? ` <span style="color:#fde68a; font-weight:400;">(+${sP} secondary)</span>` : ''}</span> · <span style="color:#38bdf8; font-weight:600;">🔵 ${dU} Direct Unlock${dU===1?'':'s'}${sU > 0 ? ` <span style="color:#bae6fd; font-weight:400;">(+${sU} secondary)</span>` : ''}</span>`;
+    const selTopic = nodes[targetIdx].topic;
+    statusTitle.innerHTML = `<span style="color:#ffffff; font-weight:700;">★ ${escapeHtml(selTopic.name)}</span>`;
+    statusSubtitle.innerHTML = `<span style="color:#f59e0b; font-weight:600;">🟡 ${dP} Direct Prereq${dP===1?'':'s'}${sP > 0 ? ` <span style="color:#fde68a; font-weight:400;">(+${sP} secondary)</span>` : ''}</span> · <span style="color:#38bdf8; font-weight:600;">🔵 ${dU} Direct Unlock${dU===1?'':'s'}${sU > 0 ? ` <span style="color:#bae6fd; font-weight:400;">(+${sU} secondary)</span>` : ''}</span> · <span style="color:#94a3b8;">Click any node to navigate</span>`;
   }
 
   function showTooltip(x, y, node) {
     const t = node.topic;
     const col = getSubjectColor(t.subject);
     let relTag = '';
+    let reasonText = '';
+
     if (lineage && selectedId) {
       if (node.topic.id === selectedId) {
-        relTag = '<div style="color: #ffffff; font-size: 0.7rem; font-weight: 700; margin-bottom: 2px;">★ SELECTED TOPIC</div>';
+        relTag = '<div style="color: #ffffff; font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; letter-spacing: 0.03em;">★ SELECTED TOPIC</div>';
       } else if (lineage.directPrereqNodes.has(node.idx)) {
-        relTag = '<div style="color: #f59e0b; font-size: 0.7rem; font-weight: 700; margin-bottom: 2px;">🟡 DIRECT PREREQUISITE (Immediate requirement)</div>';
+        relTag = '<div style="color: #f59e0b; font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; letter-spacing: 0.03em;">🟡 DIRECT PREREQUISITE (Must Learn First)</div>';
+        const edge = edges.find(e => e.sourceIdx === lineage.targetIdx && e.targetIdx === node.idx);
+        if (edge && edge.reason) {
+          reasonText = `<div style="margin-top: 5px; padding-top: 5px; border-top: 1px dashed rgba(245, 158, 11, 0.35); font-size: 0.72rem; color: #fde68a; font-style: italic;">"${escapeHtml(edge.reason)}"</div>`;
+        }
       } else if (lineage.prereqNodes.has(node.idx)) {
-        relTag = '<div style="color: #fde68a; font-size: 0.7rem; font-weight: 600; margin-bottom: 2px;">🟡 SECONDARY PREREQUISITE (Ancestor requirement)</div>';
+        relTag = '<div style="color: #fde68a; font-size: 0.7rem; font-weight: 600; margin-bottom: 3px;">🟡 SECONDARY PREREQUISITE (Ancestor requirement)</div>';
       } else if (lineage.directUnlockNodes.has(node.idx)) {
-        relTag = '<div style="color: #38bdf8; font-size: 0.7rem; font-weight: 700; margin-bottom: 2px;">🔵 DIRECT UNLOCK (Immediately unlocked)</div>';
+        relTag = '<div style="color: #38bdf8; font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; letter-spacing: 0.03em;">🔵 DIRECT UNLOCK (Gateway To)</div>';
+        const edge = edges.find(e => e.targetIdx === lineage.targetIdx && e.sourceIdx === node.idx);
+        if (edge && edge.reason) {
+          reasonText = `<div style="margin-top: 5px; padding-top: 5px; border-top: 1px dashed rgba(56, 189, 248, 0.35); font-size: 0.72rem; color: #bae6fd; font-style: italic;">"${escapeHtml(edge.reason)}"</div>`;
+        }
       } else if (lineage.unlockNodes.has(node.idx)) {
-        relTag = '<div style="color: #bae6fd; font-size: 0.7rem; font-weight: 600; margin-bottom: 2px;">🔵 SECONDARY UNLOCK (Descendant topic)</div>';
+        relTag = '<div style="color: #bae6fd; font-size: 0.7rem; font-weight: 600; margin-bottom: 3px;">🔵 SECONDARY UNLOCK (Descendant pathway)</div>';
       }
     }
 
+    const clickPrompt = (selectedId && node.topic.id !== selectedId)
+      ? '<div style="margin-top: 6px; font-size: 0.68rem; font-weight: 600; color: #38bdf8; display: flex; align-items: center; gap: 4px;">Click node to focus & navigate →</div>'
+      : '<div style="margin-top: 4px; font-size: 0.68rem; color: #94a3b8;">Click to inspect topic & prerequisite pathways</div>';
+
     tooltip.innerHTML = `
       ${relTag}
-      <div style="font-weight: 700; color: #fff; margin-bottom: 2px;">${escapeHtml(t.name)}</div>
+      <div style="font-weight: 700; color: #fff; font-size: 0.85rem; margin-bottom: 2px;">${escapeHtml(t.name)}</div>
       <div style="color: ${col}; font-size: 0.725rem; font-weight: 600;">${escapeHtml(t.subject)} · Age ${t.ageRangeStart}–${t.ageRangeEnd}</div>
-      <div style="color: #94a3b8; font-size: 0.7rem; margin-top: 3px;">${escapeHtml(t.domain)}</div>
+      <div style="color: #94a3b8; font-size: 0.7rem; margin-top: 2px;">${escapeHtml(t.domain)}</div>
+      ${reasonText}
+      ${clickPrompt}
     `;
     tooltip.style.display = 'block';
     placeTooltip(x, y);
@@ -321,17 +424,28 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
 
   function hideTooltip() { tooltip.style.display = 'none'; }
 
+  function setFocusTopic(topic) {
+    if (topic) {
+      selectedId = topic.id;
+      const idx = nodes.findIndex(n => n.topic.id === topic.id);
+      if (idx >= 0) {
+        buildLineage(idx);
+        focusNode(idx);
+      }
+      markInteraction();
+    } else {
+      selectedId = null;
+      lineage = null;
+      statusTitle.textContent = `3D Curriculum Galaxy (${nodes.length.toLocaleString()} topics)`;
+      statusSubtitle.textContent = `Rotate: Drag · Pan: Middle/Shift+Drag · Zoom: Scroll · Click any node to explore connections`;
+      hideTooltip();
+    }
+  }
+
   function setGraphData({ filteredTopics, dependencies, topicMap, focusTopic }) {
     build3DData(filteredTopics, dependencies);
     resize();
-    if (focusTopic) {
-      selectedId = focusTopic.id;
-      const idx = nodes.findIndex(n => n.topic.id === focusTopic.id);
-      if (idx >= 0) { buildLineage(idx); focusNode(idx); }
-      markInteraction();
-    } else {
-      selectedId = null; lineage = null;
-    }
+    setFocusTopic(focusTopic);
   }
 
   function build3DData(filteredTopics, dependencies) {
@@ -393,8 +507,9 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     centroidZ = nodes.length ? sumZ / nodes.length : 0;
 
     if (!selectedId) {
-      camXTarget = centroidX; camYTarget = centroidY; camZTarget = centroidZ;
-      camX = centroidX; camY = centroidY; camZ = centroidZ;
+      camXTarget = SUN_X; camYTarget = GALAXY_CENTER_Y; camZTarget = SUN_Z;
+      camX = SUN_X; camY = GALAXY_CENTER_Y; camZ = SUN_Z;
+      zoom = getDefaultZoom();
     }
 
     P = new Float32Array(nodes.length * 3);
@@ -486,7 +601,7 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       }
 
       // Radiant Sun at Galactic Core (Foundational Origin)
-      const sunPt = projectPoint(0, -160, 0, cy, sy, ct, st, cx, cyy, sc);
+      const sunPt = projectPoint(SUN_X, SUN_Y, SUN_Z, cy, sy, ct, st, cx, cyy, sc);
       if (sunPt && sunPt.pf > 0.25) {
         const sunR = Math.max(14, 28 * sunPt.pf * Math.min(1.4, Math.max(0.7, zoom)));
 
@@ -530,7 +645,7 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       const pfa = P[a * 3 + 2];
       ctx.beginPath();
       ctx.strokeStyle = hasSel
-        ? 'rgba(100, 116, 139, 0.02)'
+        ? 'rgba(100, 116, 139, 0.05)'
         : (e.strength === 'hard' ? `rgba(148, 163, 184, ${Math.min(0.12, 0.07 * pfa)})` : `rgba(148, 163, 184, ${Math.min(0.05, 0.03 * pfa)})`);
       ctx.lineWidth = 1;
       ctx.moveTo(P[a * 3], P[a * 3 + 1]); ctx.lineTo(P[b * 3], P[b * 3 + 1]);
@@ -540,7 +655,6 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     // 2. Draw Active Highlighted Edges with Directional Arrows
     if (hasSel) {
       // 2A. Inbound Prerequisites (prereq b -> dependent a; arrow points at a)
-      // Sort so secondary (ancestor) edges draw first in pale amber, direct edges draw on top in bright amber
       const prereqList = Array.from(lineage.prereqEdges);
       prereqList.sort((k1, k2) => {
         const isDir1 = edges[k1].sourceIdx === lineage.targetIdx ? 1 : 0;
@@ -555,12 +669,11 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
         const isDirect = (a === lineage.targetIdx);
         const isSoft = (e.strength === 'soft');
 
-        // Paler color and thinner stroke for secondary edges
         const strokeColor = isDirect
-          ? (isSoft ? 'rgba(245, 158, 11, 0.75)' : '#f59e0b')
-          : (isSoft ? 'rgba(253, 230, 138, 0.22)' : 'rgba(253, 230, 138, 0.42)');
-        const lineWidth = isDirect ? (isSoft ? 2.0 : 2.5) : (isSoft ? 1.0 : 1.3);
-        const arrowSize = isDirect ? (isSoft ? 7 : 8) : 5;
+          ? (isSoft ? 'rgba(245, 158, 11, 0.85)' : '#f59e0b')
+          : (isSoft ? 'rgba(253, 230, 138, 0.25)' : 'rgba(253, 230, 138, 0.45)');
+        const lineWidth = isDirect ? 2.5 : 1.2;
+        const arrowSize = isDirect ? 8 : 5;
 
         ctx.beginPath();
         ctx.strokeStyle = strokeColor;
@@ -571,7 +684,6 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       });
 
       // 2B. Outbound Unlocks (unlocker b -> unlocked a; arrow points at a)
-      // Sort so secondary (descendant) edges draw first in pale cyan, direct edges draw on top in bright sky cyan
       const unlockList = Array.from(lineage.unlockEdges);
       unlockList.sort((k1, k2) => {
         const isDir1 = edges[k1].targetIdx === lineage.targetIdx ? 1 : 0;
@@ -586,12 +698,11 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
         const isDirect = (b === lineage.targetIdx);
         const isSoft = (e.strength === 'soft');
 
-        // Paler color and thinner stroke for secondary edges
         const strokeColor = isDirect
-          ? (isSoft ? 'rgba(56, 189, 248, 0.75)' : '#38bdf8')
-          : (isSoft ? 'rgba(186, 230, 253, 0.22)' : 'rgba(186, 230, 253, 0.42)');
-        const lineWidth = isDirect ? (isSoft ? 2.0 : 2.5) : (isSoft ? 1.0 : 1.3);
-        const arrowSize = isDirect ? (isSoft ? 7 : 8) : 5;
+          ? (isSoft ? 'rgba(56, 189, 248, 0.85)' : '#38bdf8')
+          : (isSoft ? 'rgba(186, 230, 253, 0.25)' : 'rgba(186, 230, 253, 0.45)');
+        const lineWidth = isDirect ? 2.5 : 1.2;
+        const arrowSize = isDirect ? 8 : 5;
 
         ctx.beginPath();
         ctx.strokeStyle = strokeColor;
@@ -600,6 +711,52 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
         ctx.stroke();
         drawArrow(x1, y1, x2, y2, nodeRadius(a), strokeColor, arrowSize);
       });
+    }
+
+    // Helper: Draw pill badge for nodes
+    function drawNodeBadge(label, badge, sx, sy, r, badgeCol, textCol, borderCol) {
+      ctx.save();
+      const maxChars = 32;
+      const dispLabel = label.length > maxChars ? label.slice(0, maxChars - 1) + '…' : label;
+
+      ctx.font = 'bold 8px Plus Jakarta Sans, sans-serif';
+      const bW = badge ? ctx.measureText(badge).width : 0;
+
+      ctx.font = '600 10.5px Plus Jakarta Sans, sans-serif';
+      const tW = ctx.measureText(dispLabel).width;
+
+      const pillW = Math.max(bW, tW) + 16;
+      const pillH = badge ? 30 : 18;
+      const pillX = sx - pillW * 0.5;
+      const pillY = sy + r + 5;
+
+      ctx.fillStyle = 'rgba(10, 15, 26, 0.9)';
+      ctx.strokeStyle = borderCol;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(pillX, pillY, pillW, pillH, 5);
+      } else {
+        ctx.rect(pillX, pillY, pillW, pillH);
+      }
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.textAlign = 'center';
+      if (badge) {
+        ctx.font = 'bold 7.5px Plus Jakarta Sans, sans-serif';
+        ctx.fillStyle = badgeCol;
+        ctx.fillText(badge, sx, pillY + 10);
+
+        ctx.font = '600 10px Plus Jakarta Sans, sans-serif';
+        ctx.fillStyle = textCol;
+        ctx.fillText(dispLabel, sx, pillY + 23);
+      } else {
+        ctx.font = '600 10px Plus Jakarta Sans, sans-serif';
+        ctx.fillStyle = textCol;
+        ctx.fillText(dispLabel, sx, pillY + 13);
+      }
+      ctx.restore();
     }
 
     // 3. Draw Depth-Sorted Nodes (Far to Near)
@@ -616,7 +773,9 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       const isDirectUnlock = hasSel && lineage.directUnlockNodes.has(i);
       const isSecUnlock = hasSel && !isDirectUnlock && lineage.unlockNodes.has(i);
       const isHover = i === hoverIdx;
-      const dim = (hasSel && !isSelected && !isDirectPrereq && !isSecPrereq && !isDirectUnlock && !isSecUnlock) ? 0.08 : 1.0;
+
+      // Soft cosmic backdrop for non-connected nodes instead of pitch black
+      const dim = (hasSel && !isSelected && !isDirectPrereq && !isSecPrereq && !isDirectUnlock && !isSecUnlock) ? 0.24 : 1.0;
 
       // Realistic perspective depth fade
       const depthFade = isSelected || isDirectPrereq || isSecPrereq || isDirectUnlock || isSecUnlock || isHover
@@ -624,17 +783,18 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
         : Math.min(1.0, Math.max(0.42, pf * 0.95));
 
       const sx = P[i * 3], sy = P[i * 3 + 1];
-      const r = nodeRadius(i) * (isSelected ? 1.6 : (isHover ? 1.4 : 1));
+      const rMult = isSelected ? 1.65 : ((isDirectPrereq || isDirectUnlock) ? 1.38 : (isHover ? 1.3 : (isSecPrereq || isSecUnlock ? 1.1 : 1)));
+      const r = nodeRadius(i) * rMult;
 
       // Glow & Ring Encoding
       if (isSelected) {
-        ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 20;
+        ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 24;
       } else if (isDirectPrereq) {
-        ctx.shadowColor = '#f59e0b'; ctx.shadowBlur = 14;
+        ctx.shadowColor = '#f59e0b'; ctx.shadowBlur = 16;
       } else if (isSecPrereq) {
         ctx.shadowColor = 'rgba(253, 230, 138, 0.6)'; ctx.shadowBlur = 6;
       } else if (isDirectUnlock) {
-        ctx.shadowColor = '#38bdf8'; ctx.shadowBlur = 14;
+        ctx.shadowColor = '#38bdf8'; ctx.shadowBlur = 16;
       } else if (isSecUnlock) {
         ctx.shadowColor = 'rgba(186, 230, 253, 0.6)'; ctx.shadowBlur = 6;
       } else {
@@ -642,18 +802,18 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       }
 
       ctx.globalAlpha = dim * depthFade;
-      ctx.fillStyle = n.col;
+      ctx.fillStyle = isSelected ? '#ffffff' : n.col;
       ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
 
       ctx.shadowBlur = 0;
       if (isSelected) {
-        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5;
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3.0;
       } else if (isDirectPrereq) {
-        ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2.2; // Vivid golden ring
+        ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2.5; // Vivid golden ring
       } else if (isSecPrereq) {
         ctx.strokeStyle = 'rgba(253, 230, 138, 0.65)'; ctx.lineWidth = 1.3; // Pale golden ring
       } else if (isDirectUnlock) {
-        ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2.2; // Vivid cyan ring
+        ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2.5; // Vivid cyan ring
       } else if (isSecUnlock) {
         ctx.strokeStyle = 'rgba(186, 230, 253, 0.65)'; ctx.lineWidth = 1.3; // Pale cyan ring
       } else {
@@ -661,13 +821,15 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       }
       ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.stroke();
 
-      if ((isSelected || isDirectPrereq || isSecPrereq || isDirectUnlock || isSecUnlock || isHover) && dim > 0.5) {
-        ctx.font = `${isSelected ? 'bold 12px' : '10px'} Plus Jakarta Sans, sans-serif`;
-        ctx.fillStyle = isSelected
-          ? '#ffffff'
-          : (isDirectPrereq ? '#f59e0b' : (isSecPrereq ? '#fde68a' : (isDirectUnlock ? '#38bdf8' : (isSecUnlock ? '#bae6fd' : '#cbd5e1'))));
-        ctx.textAlign = 'center';
-        ctx.fillText(n.topic.name, sx, sy + r + 13);
+      // Draw clear pill badges for immediate connections without clumping
+      if (isSelected) {
+        drawNodeBadge(n.topic.name, '★ SELECTED TOPIC', sx, sy, r, '#ffffff', '#ffffff', 'rgba(255, 255, 255, 0.9)');
+      } else if (isDirectPrereq) {
+        drawNodeBadge(n.topic.name, '🟡 MUST LEARN FIRST', sx, sy, r, '#f59e0b', '#fde68a', '#f59e0b');
+      } else if (isDirectUnlock) {
+        drawNodeBadge(n.topic.name, '🔵 UNLOCKS NEXT', sx, sy, r, '#38bdf8', '#bae6fd', '#38bdf8');
+      } else if (isHover) {
+        drawNodeBadge(n.topic.name, n.topic.subject.toUpperCase(), sx, sy, r, n.col, '#ffffff', n.col);
       }
     }
     ctx.globalAlpha = 1.0;
@@ -712,5 +874,5 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     }[m]));
   }
 
-  return { setGraphData, resize, fitToView: resetCamera };
+  return { setGraphData, setFocusTopic, resize, fitToView: resetCamera };
 }

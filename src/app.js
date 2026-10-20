@@ -120,12 +120,16 @@ function handleSelectTopic(topic) {
   });
 
   if (currentView === 'graph') {
-    graphVisualizer.setGraphData({
-      filteredTopics,
-      dependencies: allDependencies,
-      topicMap,
-      focusTopic: topic
-    });
+    if (graphVisualizer.setFocusTopic) {
+      graphVisualizer.setFocusTopic(topic);
+    } else {
+      graphVisualizer.setGraphData({
+        filteredTopics,
+        dependencies: allDependencies,
+        topicMap,
+        focusTopic: topic
+      });
+    }
   }
 }
 
@@ -136,12 +140,18 @@ function handleResetFocus() {
     c.setAttribute('aria-pressed', 'false');
   });
 
-  graphVisualizer.setGraphData({
-    filteredTopics,
-    dependencies: allDependencies,
-    topicMap,
-    focusTopic: null
-  });
+  if (currentView === 'graph') {
+    if (graphVisualizer.setFocusTopic) {
+      graphVisualizer.setFocusTopic(null);
+    } else {
+      graphVisualizer.setGraphData({
+        filteredTopics,
+        dependencies: allDependencies,
+        topicMap,
+        focusTopic: null
+      });
+    }
+  }
 }
 
 function setupViewEvents() {
@@ -156,21 +166,30 @@ function setupViewEvents() {
 
 function setView(view) {
   currentView = view;
+  document.body.dataset.view = view;
   btnViewCards.classList.toggle('active', view === 'cards');
   btnViewGraph.classList.toggle('active', view === 'graph');
+
+  const appLayout = document.querySelector('.app-layout');
+  if (appLayout) appLayout.classList.toggle('graph-active', view === 'graph');
+
+  const resultsBar = document.getElementById('results-bar');
 
   if (view === 'cards') {
     cardsWrapper.style.display = 'block';
     graphWrapper.style.display = 'none';
+    if (resultsBar) resultsBar.style.display = 'flex';
   } else {
     cardsWrapper.style.display = 'none';
     graphWrapper.style.display = 'flex';
+    if (resultsBar) resultsBar.style.display = 'none';
     graphVisualizer.setGraphData({
       filteredTopics,
       dependencies: allDependencies,
       topicMap,
       focusTopic: currentFocusTopic
     });
+    graphVisualizer.resize();
   }
 }
 

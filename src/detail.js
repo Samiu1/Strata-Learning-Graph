@@ -5,6 +5,7 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
   const backdrop = document.getElementById('drawer-backdrop');
   const closeBtn = document.getElementById('drawer-btn-close');
   const backBtn = document.getElementById('drawer-btn-back');
+  const dragHandle = document.getElementById('drawer-drag-handle');
 
   const topicIdEl = document.getElementById('drawer-topic-id');
   const subjectEl = document.getElementById('drawer-subject');
@@ -35,12 +36,19 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
   closeBtn.addEventListener('click', close);
   backdrop.addEventListener('click', close);
 
+  if (dragHandle) {
+    dragHandle.addEventListener('click', () => {
+      drawer.classList.toggle('expanded');
+    });
+  }
+
   backBtn.addEventListener('click', () => {
     if (history.length > 0) {
       const prevId = history.pop();
       const prevTopic = getTopicById(prevId);
       if (prevTopic) {
         renderTopic(prevTopic, false);
+        if (onSelectTopic) onSelectTopic(prevTopic);
       }
     }
   });
@@ -66,6 +74,7 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
 
   function close() {
     drawer.classList.remove('open');
+    drawer.classList.remove('expanded');
     backdrop.classList.remove('open');
     if (onClose) onClose();
   }

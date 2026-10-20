@@ -14,6 +14,18 @@
   pointer-events: auto;
 }
 
+/* In 3D Graph View, NEVER block or dim the canvas with a full backdrop */
+body[data-view="graph"] .detail-drawer-backdrop,
+.graph-active .detail-drawer-backdrop {
+  display: none !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+.drawer-drag-handle {
+  display: none;
+}
+
 .detail-drawer {
   position: absolute;
   top: 0;
@@ -32,8 +44,63 @@
   flex-direction: column;
 }
 
+body[data-view="graph"] .detail-drawer,
+.graph-active .detail-drawer {
+  width: 420px;
+  max-width: 36vw;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5);
+}
+
 .detail-drawer.open {
   transform: translateX(0);
+}
+
+@media (max-width: 900px) {
+  body[data-view="graph"] .detail-drawer,
+  .graph-active .detail-drawer {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    height: 220px;
+    max-height: 220px;
+    border-left: none;
+    border-top: 1px solid var(--border-subtle);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.85);
+    transform: translateY(100%);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), height 0.25s cubic-bezier(0.16, 1, 0.3, 1), max-height 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  body[data-view="graph"] .detail-drawer.open,
+  .graph-active .detail-drawer.open {
+    transform: translateY(0);
+  }
+
+  body[data-view="graph"] .detail-drawer.expanded,
+  .graph-active .detail-drawer.expanded {
+    height: 75vh;
+    max-height: 75vh;
+  }
+
+  body[data-view="graph"] .drawer-drag-handle,
+  .graph-active .drawer-drag-handle {
+    display: block;
+    width: 40px;
+    height: 4px;
+    border-radius: 9999px;
+    background: rgba(148, 163, 184, 0.4);
+    margin: 8px auto 0 auto;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  body[data-view="graph"] .drawer-drag-handle:hover,
+  .graph-active .drawer-drag-handle:hover {
+    background: rgba(148, 163, 184, 0.8);
+  }
 }
 
 .drawer-header {
