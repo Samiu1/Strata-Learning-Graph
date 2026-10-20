@@ -11,6 +11,8 @@ An interactive explorer and structured taxonomy of **what children learn** acros
 
 ## Interactive UI Explorer
 
+![Strata Learning Graph UI](media/ui-screenshot.png)
+
 This repository includes a standalone web explorer to interactively browse topics, filter by age/subject, trace prerequisite paths, and inspect diagnostic assessment prompts.
 
 ### Running Locally
