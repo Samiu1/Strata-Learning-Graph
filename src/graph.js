@@ -43,6 +43,38 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     lastInteractionTime = performance.now();
   }
 
+  // Dynamic 3D Cosmic Star Dust Cloud
+  const STAR_DUST_COUNT = 180;
+  const starDust = [];
+  for (let i = 0; i < STAR_DUST_COUNT; i++) {
+    const rad = 70 + Math.pow(Math.random(), 0.72) * 730;
+    const theta = Math.random() * Math.PI * 2;
+    const py = (Math.random() - 0.5) * 580;
+    const r = 0.55 + Math.random() * 1.15;
+    const baseAlpha = 0.14 + Math.random() * 0.28;
+    const twinkleSpeed = 0.0012 + Math.random() * 0.0022;
+    const driftSpeed = 0.0006 + Math.random() * 0.0012;
+    const phase = Math.random() * Math.PI * 2;
+    const randColor = Math.random();
+    let rgb = '226, 232, 240'; // slate-200 celestial white
+    if (randColor < 0.20) rgb = '186, 230, 253'; // sky-200 cosmic cyan
+    else if (randColor < 0.35) rgb = '254, 240, 138'; // amber-200 solar dust
+    else if (randColor < 0.48) rgb = '216, 180, 254'; // violet-300 nebula glow
+
+    starDust.push({
+      x: rad * Math.cos(theta),
+      y: py,
+      z: rad * Math.sin(theta),
+      r,
+      baseAlpha,
+      twinkleSpeed,
+      driftSpeed,
+      phase,
+      rgb,
+      hasHalo: (r > 1.25 && Math.random() > 0.4)
+    });
+  }
+
   function resize() {
     DPR = Math.min(window.devicePixelRatio || 1, 2);
     VW = container.clientWidth || 800;
@@ -545,20 +577,64 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     ctx.fill();
   }
 
+  // Render ambient dynamic star dust with zero per-frame object allocation
+  function drawStarDust(now, cy, sy, ct, st, cx, cyy, sc, hasSel) {
+    const dimFactor = hasSel ? 0.22 : 1.0;
+    const len = starDust.length;
+    for (let i = 0; i < len; i++) {
+      const d = starDust[i];
+      const dyOffset = Math.sin(now * d.driftSpeed + d.phase) * 12;
+
+      // 3D perspective projection in world space
+      const dx = d.x - camX, dy = (d.y + dyOffset) - camY, dz = d.z - camZ;
+      const x = dx * cy + dz * sy, z = -dx * sy + dz * cy, y = dy;
+      const y2 = y * ct - z * st, z2 = y * st + z * ct;
+      const depth = FOV + z2 * sc * 1.5;
+      if (depth < NEAR) continue;
+
+      const pf = FOV / depth;
+      const screenX = cx + x * sc * pf;
+      const screenY = cyy - y2 * sc * pf;
+      if (screenX < -20 || screenX > VW + 20 || screenY < -20 || screenY > VH + 20) continue;
+
+      const twinkle = 0.65 + 0.35 * Math.sin(now * d.twinkleSpeed + d.phase);
+      const alpha = d.baseAlpha * twinkle * dimFactor * Math.min(1.2, pf * 1.15);
+      if (alpha <= 0.015) continue;
+
+      const r = d.r * Math.max(0.5, Math.min(1.4, pf * zoom));
+
+      if (d.hasHalo && alpha > 0.12) {
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(${d.rgb}, ${alpha * 0.22})`;
+        ctx.arc(screenX, screenY, r * 2.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(${d.rgb}, ${alpha})`;
+      ctx.arc(screenX, screenY, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
   function draw() {
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     ctx.clearRect(0, 0, VW, VH);
     project();
 
     const hasSel = !!lineage;
+    const cy = Math.cos(rotY), sy = Math.sin(rotY), ct = Math.cos(tilt), st = Math.sin(tilt);
+    const drawer = document.getElementById('detail-drawer');
+    const isDrawerOpen = drawer && drawer.classList.contains('open');
+    const cx = (isDrawerOpen && VW > 900) ? (VW - 460) * 0.5 : VW * 0.5;
+    const cyy = VH * 0.5, sc = Math.min(VW / 1400, VH / 1400) * zoom;
+    const now = performance.now();
 
-    // 0. Draw Subtle Orbital Age Reference Rings (when no node selected)
+    // 0. Ambient Cosmic Star Dust (deepest background layer)
+    drawStarDust(now, cy, sy, ct, st, cx, cyy, sc, hasSel);
+
+    // 1. Draw Subtle Orbital Age Reference Rings (when no node selected)
     if (!hasSel && nodes.length > 0) {
-      const cy = Math.cos(rotY), sy = Math.sin(rotY), ct = Math.cos(tilt), st = Math.sin(tilt);
-      const drawer = document.getElementById('detail-drawer');
-      const isDrawerOpen = drawer && drawer.classList.contains('open');
-      const cx = (isDrawerOpen && VW > 900) ? (VW - 460) * 0.5 : VW * 0.5;
-      const cyy = VH * 0.5, sc = Math.min(VW / 1400, VH / 1400) * zoom;
 
       const ringAges = [
         { age: 5, label: 'Age 5 · Early Years' },
