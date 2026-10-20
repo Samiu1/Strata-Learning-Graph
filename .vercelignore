@@ -1,0 +1,2 @@
+# Exclude large unused dataset from deployment payload (~23.5 MB)
+data/teaching-research.json
