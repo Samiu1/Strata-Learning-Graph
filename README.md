@@ -11,6 +11,10 @@ An interactive explorer and structured taxonomy of **what children learn** acros
 
 ## Interactive UI Explorer
 
+![Strata Learning Graph Visualization](media/curriculum-viz.gif)
+
+*Every dot represents a micro-topic colored by subject; vertical depth reflects developmental progression and edges show prerequisite dependencies ([high-resolution video](media/curriculum-viz.mp4)).*
+
 This repository includes a standalone web explorer to interactively browse topics, filter by age/subject, trace prerequisite paths, and inspect diagnostic assessment prompts.
 
 ### Running Locally
