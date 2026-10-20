@@ -1,6 +1,6 @@
 // Detail Drawer Module
 
-export function createDetailController({ onSelectTopic, getTopicById, getDependenciesForTopic, clusters, getSubjectColor }) {
+export function createDetailController({ onSelectTopic, onClose, getTopicById, getDependenciesForTopic, clusters, getSubjectColor }) {
   const drawer = document.getElementById('detail-drawer');
   const backdrop = document.getElementById('drawer-backdrop');
   const closeBtn = document.getElementById('drawer-btn-close');
@@ -67,6 +67,7 @@ export function createDetailController({ onSelectTopic, getTopicById, getDepende
   function close() {
     drawer.classList.remove('open');
     backdrop.classList.remove('open');
+    if (onClose) onClose();
   }
 
   function renderTopic(topic, updateHistoryState) {

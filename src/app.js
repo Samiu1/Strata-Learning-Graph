@@ -77,6 +77,7 @@ async function init() {
     // Controllers
     detailController = createDetailController({
       onSelectTopic: handleSelectTopic,
+      onClose: handleResetFocus,
       getTopicById: id => topicMap.get(id),
       getDependenciesForTopic: id => ({
         prereqs: prereqsMap.get(id) || [],

@@ -32,6 +32,15 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
   let isDragging = false, isPanning = false, hasMoved = false, lastX = 0, lastY = 0;
   let P = new Float32Array(0);
 
+  // Solar System Celestial Auto-Orbit
+  const AUTO_ORBIT_SPEED = 0.0011;
+  let autoSpeed = AUTO_ORBIT_SPEED;
+  let lastInteractionTime = 0; // 0 ensures rotation starts immediately upon graph load
+
+  function markInteraction() {
+    lastInteractionTime = performance.now();
+  }
+
   function resize() {
     DPR = Math.min(window.devicePixelRatio || 1, 2);
     VW = container.clientWidth || 800;
@@ -49,6 +58,7 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
 
   // Pointer Events (Left: Rotate, Middle or Shift+Left: Pan)
   container.addEventListener('pointerdown', (e) => {
+    markInteraction();
     if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
       e.preventDefault();
       isPanning = true; hasMoved = false; lastX = e.clientX; lastY = e.clientY;
@@ -63,6 +73,7 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
 
   container.addEventListener('pointermove', (e) => {
     if (isPanning) {
+      markInteraction();
       const dx = e.clientX - lastX, dy = e.clientY - lastY;
       if (Math.abs(dx) + Math.abs(dy) > 2) hasMoved = true;
       const panSpeed = (1 / zoom) * 0.9, cosY = Math.cos(rotY), sinY = Math.sin(rotY);
@@ -70,6 +81,7 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       camXTarget = camX; camYTarget = camY; camZTarget = camZ;
       lastX = e.clientX; lastY = e.clientY;
     } else if (isDragging) {
+      markInteraction();
       const dx = e.clientX - lastX, dy = e.clientY - lastY;
       if (Math.abs(dx) + Math.abs(dy) > 3) hasMoved = true;
       rotY -= dx * 0.0055; tilt = Math.max(-1.15, Math.min(0.2, tilt - dy * 0.004));
@@ -81,6 +93,7 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
   });
 
   container.addEventListener('pointerup', (e) => {
+    markInteraction();
     if (e.button === 1 || isPanning) {
       isPanning = false; container.style.cursor = '';
     } else if (e.button === 0) {
@@ -95,14 +108,16 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
 
   container.addEventListener('wheel', (e) => {
     e.preventDefault();
+    markInteraction();
     zoom = Math.max(0.4, Math.min(3.5, zoom * Math.exp(-e.deltaY * 0.0016)));
     zoomTarget = null;
   }, { passive: false });
 
-  btnFit.addEventListener('click', resetCamera);
-  btnZoomIn.addEventListener('click', () => { zoom = Math.min(3.5, zoom * 1.25); zoomTarget = null; });
-  btnZoomOut.addEventListener('click', () => { zoom = Math.max(0.4, zoom * 0.8); zoomTarget = null; });
+  btnFit.addEventListener('click', () => { markInteraction(); resetCamera(); });
+  btnZoomIn.addEventListener('click', () => { markInteraction(); zoom = Math.min(3.5, zoom * 1.25); zoomTarget = null; });
+  btnZoomOut.addEventListener('click', () => { markInteraction(); zoom = Math.max(0.4, zoom * 0.8); zoomTarget = null; });
   btnReset.addEventListener('click', () => {
+    markInteraction();
     selectedId = null; lineage = null; hoverIdx = -1;
     hideTooltip(); resetCamera();
     statusSubtitle.textContent = `Rotate: Left Drag · Pan: Middle Drag / Shift+Drag · Zoom: Scroll`;
@@ -174,14 +189,20 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     const idx = pick(e.clientX - rect.left, e.clientY - rect.top);
     if (idx !== hoverIdx) {
       hoverIdx = idx;
-      if (hoverIdx >= 0) showTooltip(e.clientX - rect.left, e.clientY - rect.top, nodes[hoverIdx]);
-      else hideTooltip();
+      if (hoverIdx >= 0) {
+        markInteraction();
+        showTooltip(e.clientX - rect.left, e.clientY - rect.top, nodes[hoverIdx]);
+      } else {
+        hideTooltip();
+      }
     } else if (hoverIdx >= 0) {
+      markInteraction();
       placeTooltip(e.clientX - rect.left, e.clientY - rect.top);
     }
   }
 
   function handleClick(e) {
+    markInteraction();
     const rect = canvas.getBoundingClientRect();
     const idx = pick(e.clientX - rect.left, e.clientY - rect.top);
     if (idx < 0) {
@@ -307,6 +328,7 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       selectedId = focusTopic.id;
       const idx = nodes.findIndex(n => n.topic.id === focusTopic.id);
       if (idx >= 0) { buildLineage(idx); focusNode(idx); }
+      markInteraction();
     } else {
       selectedId = null; lineage = null;
     }
@@ -659,6 +681,24 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       if (tiltTarget !== null) tilt += (tiltTarget - tilt) * 0.12;
       if (zoomTarget !== null) zoom += (zoomTarget - zoom) * 0.12;
       if (Math.abs(d) < 0.006) { rotYTarget = null; tiltTarget = null; zoomTarget = null; }
+    } else {
+      // Solar system celestial auto-orbit animation
+      const now = performance.now();
+      const hasActiveNode = (selectedId !== null);
+      const isInteracting = isDragging || isPanning || (hoverIdx >= 0) || (now - lastInteractionTime < 2000);
+
+      if (hasActiveNode || isInteracting) {
+        // Smoothly decelerate to a complete stop
+        autoSpeed += (0 - autoSpeed) * 0.14;
+        if (Math.abs(autoSpeed) < 0.00002) autoSpeed = 0;
+      } else {
+        // Smoothly accelerate back to majestic solar rotation after 2s without interaction
+        autoSpeed += (AUTO_ORBIT_SPEED - autoSpeed) * 0.025;
+      }
+
+      if (autoSpeed > 0.00001 && !isDragging) {
+        rotY += autoSpeed;
+      }
     }
     draw();
     requestAnimationFrame(loop);
