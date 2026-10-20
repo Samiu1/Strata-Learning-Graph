@@ -27,13 +27,56 @@ export function createFilterController({
   const btnResetFilters = document.getElementById('btn-reset-filters');
   const btnEmptyReset = document.getElementById('btn-empty-reset');
   const activeFilterTags = document.getElementById('active-filter-tags');
+  const sidebarFilters = document.getElementById('sidebar-filters');
+  const sidebarHeader = document.getElementById('sidebar-header');
+  const btnToggleFiltersMobile = document.getElementById('btn-toggle-filters-mobile');
+  const filtersMobileSummary = document.getElementById('filters-mobile-summary');
 
   function init() {
     setupEvents();
     renderSubjectChips();
+    updateSearchPlaceholder();
+    updateMobileFilterSummary();
+    window.addEventListener('resize', updateSearchPlaceholder);
+  }
+
+  function updateSearchPlaceholder() {
+    if (!searchInput) return;
+    if (window.innerWidth <= 600) {
+      searchInput.placeholder = 'Search 1,591 topics...';
+    } else {
+      searchInput.placeholder = 'Search topics, concepts, standards... (Press / to focus)';
+    }
+  }
+
+  function updateMobileFilterSummary() {
+    if (!filtersMobileSummary) return;
+    const isAllSubjects = filterState.selectedSubjects.size === Object.keys(subjectColors).length;
+    const subjText = isAllSubjects ? 'All Subjects' : `${filterState.selectedSubjects.size} Subject${filterState.selectedSubjects.size === 1 ? '' : 's'}`;
+    filtersMobileSummary.textContent = `Ages ${filterState.minAge}–${filterState.maxAge} · ${subjText}`;
   }
 
   function setupEvents() {
+    if (btnToggleFiltersMobile && sidebarFilters) {
+      const toggleMobileFilters = (e) => {
+        if (e.target.closest('#btn-reset-filters')) return;
+        if (window.innerWidth <= 900) {
+          const isExp = sidebarFilters.classList.toggle('is-expanded');
+          btnToggleFiltersMobile.setAttribute('aria-expanded', isExp ? 'true' : 'false');
+          const txtEl = btnToggleFiltersMobile.querySelector('.toggle-text');
+          if (txtEl) txtEl.textContent = isExp ? 'Done' : 'Filters';
+        }
+      };
+      btnToggleFiltersMobile.addEventListener('click', toggleMobileFilters);
+      if (sidebarHeader) {
+        sidebarHeader.addEventListener('click', (e) => {
+          if (e.target === sidebarHeader || e.target.closest('.sidebar-header-title-wrap')) {
+            toggleMobileFilters(e);
+          }
+        });
+      }
+    }
+
     searchInput.addEventListener('input', () => {
       filterState.query = searchInput.value.trim().toLowerCase();
       searchClearBtn.style.display = filterState.query ? 'block' : 'none';
@@ -110,6 +153,7 @@ export function createFilterController({
       btn.classList.toggle('active', bMin === min && bMax === max);
     });
 
+    updateMobileFilterSummary();
     onFilterChange();
   }
 
@@ -146,6 +190,7 @@ export function createFilterController({
           filterState.selectedSubjects.add(subject);
         }
         updateSubjectChipsActiveState();
+        updateMobileFilterSummary();
         onFilterChange();
       });
 
@@ -157,6 +202,7 @@ export function createFilterController({
     subjectChipsContainer.querySelectorAll('.subject-chip').forEach(chip => {
       chip.classList.toggle('active', filterState.selectedSubjects.has(chip.dataset.subject));
     });
+    updateMobileFilterSummary();
   }
 
 
@@ -211,6 +257,7 @@ export function createFilterController({
     filterState.sortBy = 'age-asc';
     sortSelect.value = 'age-asc';
 
+    updateMobileFilterSummary();
     onFilterChange();
   }
 

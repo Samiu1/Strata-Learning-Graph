@@ -213,14 +213,18 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
   });
 
   function getDefaultZoom() {
-    if (VW < 600 || VH < 450) return 1.25;
-    if (VW < 900 || VH < 600) return 1.15;
+    if (VW < 600 || VH < 450) return 2.15;
+    if (VW < 900 || VH < 600) return 1.45;
     return 1.05;
   }
 
   function resetCamera() {
-    rotYTarget = 0.65; tiltTarget = -0.52; zoomTarget = getDefaultZoom();
-    camXTarget = SUN_X; camYTarget = GALAXY_CENTER_Y; camZTarget = SUN_Z;
+    rotYTarget = 0.65;
+    tiltTarget = (VW <= 600) ? -0.38 : -0.52;
+    zoomTarget = getDefaultZoom();
+    camXTarget = SUN_X;
+    camYTarget = (VW <= 600) ? GALAXY_CENTER_Y - 20 : GALAXY_CENTER_Y;
+    camZTarget = SUN_Z;
   }
 
   // Helper projection for spatial reference markers
@@ -252,9 +256,9 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
         // Desktop: drawer occupies right side (~420px)
         cx = (VW - 420) * 0.5;
       } else {
-        // Mobile: bottom drawer occupies ~220px in peek mode
-        const drawerH = Math.min(VH * 0.42, drawer.clientHeight || 220);
-        cyy = (VH - drawerH) * 0.5;
+        // Mobile: center node in the visible space above the bottom sheet
+        const drawerH = Math.min(VH * 0.45, drawer.clientHeight || 280);
+        cyy = (VH - drawerH) * 0.52;
       }
     }
     const sc = Math.min(VW / 1400, VH / 1400) * zoom;
@@ -352,7 +356,10 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       const z2 = -n.x * Math.sin(cand) + n.z * Math.cos(cand);
       if (z2 < bestZ) { bestZ = z2; best = cand; }
     }
-    rotYTarget = best; tiltTarget = -0.32; zoomTarget = Math.max(zoom, 1.35);
+    const isMobile = VW <= 600;
+    rotYTarget = best;
+    tiltTarget = isMobile ? -0.24 : -0.32;
+    zoomTarget = isMobile ? Math.max(zoom, 1.85) : Math.max(zoom, 1.35);
   }
 
   // Build dual directional lineage: Prerequisites (inbound) and Unlocks (outbound)
@@ -586,7 +593,7 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
 
   // Render ambient dynamic star dust with continuous orbital flow and organic breathing
   function drawStarDust(now, cy, sy, ct, st, cx, cyy, sc, hasSel) {
-    const dimFactor = hasSel ? 0.22 : 1.0;
+    const dimFactor = hasSel ? ((VW <= 600) ? 0.04 : 0.16) : 1.0;
     const len = starDust.length;
     for (let i = 0; i < len; i++) {
       const d = starDust[i];
@@ -638,6 +645,7 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     project();
 
     const hasSel = !!lineage;
+    const isMobile = VW <= 600;
     const cy = Math.cos(rotY), sy = Math.sin(rotY), ct = Math.cos(tilt), st = Math.sin(tilt);
     const drawer = document.getElementById('detail-drawer');
     const isDrawerOpen = drawer && drawer.classList.contains('open');
@@ -731,7 +739,7 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       const pfa = P[a * 3 + 2];
       ctx.beginPath();
       ctx.strokeStyle = hasSel
-        ? 'rgba(100, 116, 139, 0.05)'
+        ? (isMobile ? 'rgba(30, 41, 59, 0.008)' : 'rgba(100, 116, 139, 0.05)')
         : (e.strength === 'hard' ? `rgba(148, 163, 184, ${Math.min(0.12, 0.07 * pfa)})` : `rgba(148, 163, 184, ${Math.min(0.05, 0.03 * pfa)})`);
       ctx.lineWidth = 1;
       ctx.moveTo(P[a * 3], P[a * 3 + 1]); ctx.lineTo(P[b * 3], P[b * 3 + 1]);
@@ -799,55 +807,104 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       });
     }
 
-    // Helper: Draw pill badge for nodes
-    function drawNodeBadge(label, badge, sx, sy, r, badgeCol, textCol, borderCol) {
-      ctx.save();
-      const maxChars = 32;
+    // Collision tracking per frame
+    const placedBoxes = [];
+
+    function canPlaceBox(box) {
+      for (const b of placedBoxes) {
+        if (box.x < b.x + b.w + 6 && box.x + box.w + 6 > b.x &&
+            box.y < b.y + b.h + 6 && box.y + box.h + 6 > b.y) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    // Helper: Draw pill badge for nodes with boundary clamping and collision avoidance
+    function drawNodeBadge(label, badge, sx, sy, r, badgeCol, textCol, borderCol, isPriority = false) {
+      const isMobile = VW <= 600;
+      const maxChars = isMobile ? 18 : 28;
       const dispLabel = label.length > maxChars ? label.slice(0, maxChars - 1) + '…' : label;
 
-      ctx.font = 'bold 8px Plus Jakarta Sans, sans-serif';
+      ctx.save();
+      ctx.globalAlpha = 1.0;
+      const badgeFont = isMobile ? 'bold 7px Plus Jakarta Sans, sans-serif' : 'bold 8px Plus Jakarta Sans, sans-serif';
+      ctx.font = badgeFont;
       const bW = badge ? ctx.measureText(badge).width : 0;
 
-      ctx.font = '600 10.5px Plus Jakarta Sans, sans-serif';
+      const labelFont = isMobile ? '600 9px Plus Jakarta Sans, sans-serif' : '600 10.5px Plus Jakarta Sans, sans-serif';
+      ctx.font = labelFont;
       const tW = ctx.measureText(dispLabel).width;
 
-      const pillW = Math.max(bW, tW) + 16;
-      const pillH = badge ? 30 : 18;
-      const pillX = sx - pillW * 0.5;
-      const pillY = sy + r + 5;
+      const padX = isMobile ? 12 : 16;
+      const pillW = Math.max(bW, tW) + padX;
+      const pillH = badge ? (isMobile ? 24 : 30) : (isMobile ? 15 : 18);
 
-      ctx.fillStyle = 'rgba(10, 15, 26, 0.9)';
+      // Clamp X strictly within canvas visible margins so it NEVER clips screen edges
+      const pillX = Math.max(8, Math.min(VW - pillW - 8, sx - pillW * 0.5));
+
+      // Try placing below node first, then above
+      let chosenY = sy + r + 5;
+      let box = { x: pillX, y: chosenY, w: pillW, h: pillH };
+
+      if (!isPriority) {
+        if (!canPlaceBox(box) || chosenY + pillH > VH - 8) {
+          chosenY = sy - r - pillH - 5;
+          box.y = chosenY;
+          if (!canPlaceBox(box) || chosenY < 8) {
+            // Cannot place without collision: skip text box to keep view clean!
+            ctx.restore();
+            return false;
+          }
+        }
+      } else {
+        // Priority (selected node): force clamp
+        if (chosenY + pillH > VH - 8) {
+          chosenY = sy - r - pillH - 5;
+        }
+        chosenY = Math.max(8, Math.min(VH - pillH - 8, chosenY));
+        box.y = chosenY;
+      }
+
+      placedBoxes.push(box);
+
+      ctx.fillStyle = 'rgba(10, 15, 26, 0.92)';
       ctx.strokeStyle = borderCol;
-      ctx.lineWidth = 1.2;
+      ctx.lineWidth = isPriority ? 1.5 : 1.2;
       ctx.beginPath();
       if (ctx.roundRect) {
-        ctx.roundRect(pillX, pillY, pillW, pillH, 5);
+        ctx.roundRect(box.x, box.y, pillW, pillH, 5);
       } else {
-        ctx.rect(pillX, pillY, pillW, pillH);
+        ctx.rect(box.x, box.y, pillW, pillH);
       }
       ctx.fill();
       ctx.stroke();
 
       ctx.textAlign = 'center';
       if (badge) {
-        ctx.font = 'bold 7.5px Plus Jakarta Sans, sans-serif';
+        ctx.font = badgeFont;
         ctx.fillStyle = badgeCol;
-        ctx.fillText(badge, sx, pillY + 10);
+        ctx.fillText(badge, box.x + pillW * 0.5, box.y + (isMobile ? 8 : 10));
 
-        ctx.font = '600 10px Plus Jakarta Sans, sans-serif';
+        ctx.font = labelFont;
         ctx.fillStyle = textCol;
-        ctx.fillText(dispLabel, sx, pillY + 23);
+        ctx.fillText(dispLabel, box.x + pillW * 0.5, box.y + (isMobile ? 19 : 23));
       } else {
-        ctx.font = '600 10px Plus Jakarta Sans, sans-serif';
+        ctx.font = labelFont;
         ctx.fillStyle = textCol;
-        ctx.fillText(dispLabel, sx, pillY + 13);
+        ctx.fillText(dispLabel, box.x + pillW * 0.5, box.y + (isMobile ? 11 : 13));
       }
       ctx.restore();
+      return true;
     }
 
     // 3. Draw Depth-Sorted Nodes (Far to Near)
     const order = nodes.map((_, i) => i);
     order.sort((a, b) => P[a * 3 + 2] - P[b * 3 + 2]);
+
+    let selectedNodeBadgeData = null;
+    const directPrereqBadges = [];
+    const directUnlockBadges = [];
 
     for (const i of order) {
       if (P[i * 3 + 2] === 0) continue;
@@ -860,16 +917,36 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       const isSecUnlock = hasSel && !isDirectUnlock && lineage.unlockNodes.has(i);
       const isHover = i === hoverIdx;
 
-      // Soft cosmic backdrop for non-connected nodes instead of pitch black
-      const dim = (hasSel && !isSelected && !isDirectPrereq && !isSecPrereq && !isDirectUnlock && !isSecUnlock) ? 0.24 : 1.0;
+      const isConnected = isSelected || isDirectPrereq || isSecPrereq || isDirectUnlock || isSecUnlock;
+
+      // Deeply dim non-connected and secondary nodes on mobile when a node is selected
+      let dim = 1.0;
+      if (hasSel && !isConnected) {
+        dim = isMobile ? 0.015 : 0.12;
+      } else if (hasSel && (isSecPrereq || isSecUnlock)) {
+        dim = isMobile ? 0.32 : 0.85;
+      }
 
       // Realistic perspective depth fade
-      const depthFade = isSelected || isDirectPrereq || isSecPrereq || isDirectUnlock || isSecUnlock || isHover
+      const baseDepthFade = Math.min(1.0, Math.max(0.42, pf * 0.95));
+      const depthFade = isSelected || isDirectPrereq || isDirectUnlock || isHover
         ? 1.0
-        : Math.min(1.0, Math.max(0.42, pf * 0.95));
+        : (hasSel
+            ? (isSecPrereq || isSecUnlock
+                ? (isMobile ? 0.65 : 0.9)
+                : (isMobile ? Math.min(0.2, Math.max(0.06, pf * 0.2)) : baseDepthFade))
+            : baseDepthFade);
 
       const sx = P[i * 3], sy = P[i * 3 + 1];
-      const rMult = isSelected ? 1.65 : ((isDirectPrereq || isDirectUnlock) ? 1.38 : (isHover ? 1.3 : (isSecPrereq || isSecUnlock ? 1.1 : 1)));
+      const rMult = isSelected
+        ? 1.65
+        : ((isDirectPrereq || isDirectUnlock)
+            ? 1.38
+            : (isHover
+                ? 1.3
+                : (isSecPrereq || isSecUnlock
+                    ? (isMobile ? 0.95 : 1.1)
+                    : (isMobile && hasSel ? 0.6 : 1))));
       const r = nodeRadius(i) * rMult;
 
       // Glow & Ring Encoding
@@ -878,17 +955,24 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       } else if (isDirectPrereq) {
         ctx.shadowColor = '#f59e0b'; ctx.shadowBlur = 16;
       } else if (isSecPrereq) {
-        ctx.shadowColor = 'rgba(253, 230, 138, 0.6)'; ctx.shadowBlur = 6;
+        ctx.shadowColor = isMobile ? 'transparent' : 'rgba(253, 230, 138, 0.6)'; ctx.shadowBlur = isMobile ? 0 : 6;
       } else if (isDirectUnlock) {
         ctx.shadowColor = '#38bdf8'; ctx.shadowBlur = 16;
       } else if (isSecUnlock) {
-        ctx.shadowColor = 'rgba(186, 230, 253, 0.6)'; ctx.shadowBlur = 6;
+        ctx.shadowColor = isMobile ? 'transparent' : 'rgba(186, 230, 253, 0.6)'; ctx.shadowBlur = isMobile ? 0 : 6;
       } else {
         ctx.shadowBlur = 0;
       }
 
       ctx.globalAlpha = dim * depthFade;
-      ctx.fillStyle = isSelected ? '#ffffff' : n.col;
+      if (isSelected) {
+        ctx.fillStyle = '#ffffff';
+      } else if (hasSel && !isConnected) {
+        // Darken non-active nodes into a pitch cosmic charcoal/navy tone
+        ctx.fillStyle = isMobile ? '#060912' : '#1e283c';
+      } else {
+        ctx.fillStyle = n.col;
+      }
       ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
 
       ctx.shadowBlur = 0;
@@ -897,24 +981,46 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       } else if (isDirectPrereq) {
         ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2.5; // Vivid golden ring
       } else if (isSecPrereq) {
-        ctx.strokeStyle = 'rgba(253, 230, 138, 0.65)'; ctx.lineWidth = 1.3; // Pale golden ring
+        ctx.strokeStyle = isMobile ? 'rgba(253, 230, 138, 0.35)' : 'rgba(253, 230, 138, 0.65)'; ctx.lineWidth = 1.0;
       } else if (isDirectUnlock) {
         ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2.5; // Vivid cyan ring
       } else if (isSecUnlock) {
-        ctx.strokeStyle = 'rgba(186, 230, 253, 0.65)'; ctx.lineWidth = 1.3; // Pale cyan ring
+        ctx.strokeStyle = isMobile ? 'rgba(186, 230, 253, 0.35)' : 'rgba(186, 230, 253, 0.65)'; ctx.lineWidth = 1.0;
       } else {
-        ctx.strokeStyle = 'rgba(10, 14, 24, 0.6)'; ctx.lineWidth = 1;
+        ctx.strokeStyle = hasSel ? 'transparent' : 'rgba(10, 14, 24, 0.6)'; ctx.lineWidth = 1;
       }
       ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.stroke();
 
-      // Draw clear pill badges for immediate connections without clumping
       if (isSelected) {
-        drawNodeBadge(n.topic.name, '★ SELECTED', sx, sy, r, '#ffffff', '#ffffff', 'rgba(255, 255, 255, 0.9)');
+        selectedNodeBadgeData = { name: n.topic.name, sx, sy, r };
       } else if (isDirectPrereq) {
-        drawNodeBadge(n.topic.name, '🟡 PREREQUISITE', sx, sy, r, '#f59e0b', '#fde68a', '#f59e0b');
+        directPrereqBadges.push({ name: n.topic.name, sx, sy, r });
       } else if (isDirectUnlock) {
-        drawNodeBadge(n.topic.name, '🔵 UNLOCKS', sx, sy, r, '#38bdf8', '#bae6fd', '#38bdf8');
+        directUnlockBadges.push({ name: n.topic.name, sx, sy, r });
       }
+    }
+
+    // 4. Draw Pill Badges: Selected Node ALWAYS first, then non-overlapping direct connections
+    ctx.globalAlpha = 1.0;
+    const maxDirectBadges = (VW <= 600) ? 2 : 4;
+    if (selectedNodeBadgeData) {
+      drawNodeBadge(selectedNodeBadgeData.name, '★ SELECTED', selectedNodeBadgeData.sx, selectedNodeBadgeData.sy, selectedNodeBadgeData.r, '#ffffff', '#ffffff', 'rgba(255, 255, 255, 0.95)', true);
+    }
+
+    let pCount = 0;
+    for (const b of directPrereqBadges) {
+      if (pCount >= maxDirectBadges) break;
+      if (drawNodeBadge(b.name, '🟡 PREREQUISITE', b.sx, b.sy, b.r, '#f59e0b', '#fde68a', '#f59e0b', false)) {
+        pCount++;
+      }
+    }
+
+    let uCount = 0;
+    for (const b of directUnlockBadges) {
+      if (uCount >= maxDirectBadges) break;
+      if (drawNodeBadge(b.name, '🔵 UNLOCKS', b.sx, b.sy, b.r, '#38bdf8', '#bae6fd', '#38bdf8', false)) {
+        uCount++;
+       }
     }
     ctx.globalAlpha = 1.0;
   }

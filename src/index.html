@@ -93,9 +93,20 @@
     <div class="app-layout graph-active">
       <!-- Filter Sidebar -->
       <aside class="sidebar-filters" id="sidebar-filters">
-        <div class="sidebar-header">
-          <span class="filters-heading">Filter</span>
-          <button id="btn-reset-filters" class="reset-btn" title="Reset all active filters">Reset</button>
+        <div class="sidebar-header" id="sidebar-header">
+          <div class="sidebar-header-title-wrap">
+            <span class="filters-heading">Filter & Sort</span>
+            <span class="filters-mobile-summary" id="filters-mobile-summary">Ages 4–15 · All Subjects</span>
+          </div>
+          <div class="sidebar-header-actions">
+            <button id="btn-toggle-filters-mobile" class="filter-toggle-mobile-btn" aria-expanded="false" title="Toggle Filters">
+              <span class="toggle-text">Filters</span>
+              <svg class="toggle-icon" viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
+                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
+              </svg>
+            </button>
+            <button id="btn-reset-filters" class="reset-btn" title="Reset all active filters">Reset</button>
+          </div>
         </div>
 
         <!-- Age Filter -->
@@ -205,6 +216,20 @@
               <button class="graph-control-btn" id="btn-graph-reset" title="Reset View">Reset</button>
             </div>
           </div>
+          <!-- Mobile Subject Color Legend Bar -->
+          <div class="graph-subject-legend" id="graph-subject-legend" aria-label="Subject color legend">
+            <div class="legend-scroll-wrap" id="legend-scroll-wrap"></div>
+          </div>
+          <!-- "What is this" Interactive Guide Card -->
+          <div class="graph-guide-banner" id="graph-guide-banner">
+            <div class="guide-banner-content">
+              <span class="guide-icon">🪐</span>
+              <div class="guide-text">
+                <strong>Curriculum Galaxy:</strong> 1,591 topics connected by prerequisite pathways. <em>Tap any node</em> to see what it unlocks.
+              </div>
+            </div>
+            <button class="guide-dismiss-btn" id="btn-dismiss-guide" title="Dismiss guide" aria-label="Dismiss guide">×</button>
+          </div>
           <div class="graph-canvas-container" id="graph-canvas-container">
             <canvas id="graph-canvas"></canvas>
             <div class="graph-tooltip" id="graph-tooltip" style="display: none;"></div>
@@ -235,6 +260,11 @@
                 <span class="type-badge" id="drawer-type">CONCEPTUAL</span>
               </div>
               <h2 class="drawer-title" id="drawer-title">Topic Title</h2>
+              <div class="drawer-quick-stat" id="drawer-quick-stat">
+                <span class="quick-stat-prereqs" id="quick-stat-prereqs">🟡 0 Prerequisites</span>
+                <span class="quick-stat-divider">·</span>
+                <span class="quick-stat-unlocks" id="quick-stat-unlocks">🔵 0 Unlocks</span>
+              </div>
               <p class="drawer-desc" id="drawer-desc">Topic description goes here...</p>
             </div>
 

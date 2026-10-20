@@ -101,6 +101,7 @@ async function init() {
 
     filterController.init();
     setupViewEvents();
+    renderMobileLegend();
     setView('graph');
     applyFilters();
   } catch (err) {
@@ -109,9 +110,35 @@ async function init() {
   }
 }
 
+function renderMobileLegend() {
+  const legendWrap = document.getElementById('legend-scroll-wrap');
+  if (!legendWrap) return;
+  legendWrap.innerHTML = '';
+  Object.keys(SUBJECT_COLORS).forEach(subj => {
+    const color = SUBJECT_COLORS[subj];
+    const chip = document.createElement('button');
+    chip.className = 'legend-chip';
+    chip.setAttribute('type', 'button');
+    chip.innerHTML = `<span class="legend-dot" style="background-color: ${color}"></span><span>${subj}</span>`;
+    chip.addEventListener('click', () => {
+      const state = filterController.getState();
+      if (state.selectedSubjects.has(subj) && state.selectedSubjects.size === 1) {
+        state.selectedSubjects = new Set(Object.keys(SUBJECT_COLORS));
+      } else {
+        state.selectedSubjects = new Set([subj]);
+      }
+      applyFilters();
+    });
+    legendWrap.appendChild(chip);
+  });
+}
+
 function handleSelectTopic(topic) {
   currentFocusTopic = topic;
   detailController.open(topic, true);
+
+  const guideBanner = document.getElementById('graph-guide-banner');
+  if (guideBanner) guideBanner.classList.add('is-hidden');
 
   // Sync selected card state in cards view
   document.querySelectorAll('.topic-card').forEach(c => {
@@ -159,6 +186,14 @@ function setupViewEvents() {
   btnViewCards.addEventListener('click', () => setView('cards'));
   btnViewGraph.addEventListener('click', () => setView('graph'));
 
+  const btnDismissGuide = document.getElementById('btn-dismiss-guide');
+  const guideBanner = document.getElementById('graph-guide-banner');
+  if (btnDismissGuide && guideBanner) {
+    btnDismissGuide.addEventListener('click', () => {
+      guideBanner.classList.add('is-hidden');
+    });
+  }
+
   btnLoadMore.addEventListener('click', () => {
     displayedCount += PAGE_SIZE;
     renderCards(false);
@@ -170,6 +205,11 @@ function setView(view) {
   document.body.dataset.view = view;
   btnViewCards.classList.toggle('active', view === 'cards');
   btnViewGraph.classList.toggle('active', view === 'graph');
+
+  // Close inspector drawer on view switch so open drawer never leaks into the other view
+  if (detailController) {
+    detailController.close();
+  }
 
   const appLayout = document.querySelector('.app-layout');
   if (appLayout) appLayout.classList.toggle('graph-active', view === 'graph');

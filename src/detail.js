@@ -110,6 +110,15 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
     prereqsCountEl.textContent = prereqs.length;
     unlocksCountEl.textContent = unlocks.length;
 
+    const quickPrereqsEl = document.getElementById('quick-stat-prereqs');
+    const quickUnlocksEl = document.getElementById('quick-stat-unlocks');
+    if (quickPrereqsEl) {
+      quickPrereqsEl.textContent = `🟡 ${prereqs.length} Prerequisite${prereqs.length === 1 ? '' : 's'}`;
+    }
+    if (quickUnlocksEl) {
+      quickUnlocksEl.textContent = `🔵 ${unlocks.length} Unlock${unlocks.length === 1 ? '' : 's'}`;
+    }
+
     renderPrereqList(prereqsListEl, prereqs, 'prereq');
     renderPrereqList(unlocksListEl, unlocks, 'unlock');
 

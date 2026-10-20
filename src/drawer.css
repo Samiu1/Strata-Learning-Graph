@@ -39,7 +39,9 @@ body[data-view="graph"] .detail-drawer-backdrop,
   box-shadow: -8px 0 32px rgba(0, 0, 0, 0.7);
   z-index: 60;
   transform: translateX(100%);
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s;
   display: flex;
   flex-direction: column;
 }
@@ -53,42 +55,51 @@ body[data-view="graph"] .detail-drawer,
 
 .detail-drawer.open {
   transform: translateX(0);
+  visibility: visible;
+  pointer-events: auto;
 }
 
 @media (max-width: 900px) {
   body[data-view="graph"] .detail-drawer,
-  .graph-active .detail-drawer {
+  .graph-active .detail-drawer,
+  .detail-drawer {
     top: auto;
     bottom: 0;
     left: 0;
     right: 0;
-    width: 100%;
-    max-width: 100%;
-    height: 220px;
-    max-height: 220px;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 310px;
+    max-height: 48vh;
     border-left: none;
     border-top: 1px solid var(--border-subtle);
     border-radius: 16px 16px 0 0;
     box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.85);
     transform: translateY(100%);
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), height 0.25s cubic-bezier(0.16, 1, 0.3, 1), max-height 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), height 0.25s cubic-bezier(0.16, 1, 0.3, 1), max-height 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s;
+    z-index: 70;
   }
 
   body[data-view="graph"] .detail-drawer.open,
-  .graph-active .detail-drawer.open {
+  .graph-active .detail-drawer.open,
+  .detail-drawer.open {
     transform: translateY(0);
+    visibility: visible;
+    pointer-events: auto;
   }
 
   body[data-view="graph"] .detail-drawer.expanded,
-  .graph-active .detail-drawer.expanded {
-    height: 75vh;
-    max-height: 75vh;
+  .graph-active .detail-drawer.expanded,
+  .detail-drawer.expanded {
+    height: 82vh;
+    max-height: 82vh;
   }
 
-  body[data-view="graph"] .drawer-drag-handle,
-  .graph-active .drawer-drag-handle {
+  .drawer-drag-handle {
     display: block;
-    width: 40px;
+    width: 44px;
     height: 4px;
     border-radius: 9999px;
     background: rgba(148, 163, 184, 0.4);
@@ -97,9 +108,42 @@ body[data-view="graph"] .detail-drawer,
     flex-shrink: 0;
   }
 
-  body[data-view="graph"] .drawer-drag-handle:hover,
-  .graph-active .drawer-drag-handle:hover {
-    background: rgba(148, 163, 184, 0.8);
+  .drawer-drag-handle:hover,
+  .drawer-drag-handle:active {
+    background: rgba(148, 163, 184, 0.85);
+  }
+
+  .drawer-header {
+    padding: 0.55rem 0.85rem;
+  }
+
+  .drawer-id-badge {
+    display: none !important; /* Hide raw ID chip on mobile */
+  }
+
+  .drawer-content {
+    padding: 0.75rem 1rem 1.5rem 1rem;
+    gap: 0.75rem;
+  }
+
+  .drawer-title {
+    font-size: 1.1rem;
+    line-height: 1.25;
+    margin-top: 0.2rem;
+  }
+
+  .drawer-desc {
+    font-size: 0.8rem;
+    line-height: 1.35;
+    margin-top: 0.35rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .detail-drawer.expanded .drawer-desc {
+    -webkit-line-clamp: unset;
   }
 }
 
@@ -178,6 +222,27 @@ body[data-view="graph"] .detail-drawer,
   font-size: 0.875rem;
   color: #cbd5e1;
   margin-top: 0.5rem;
+}
+
+.drawer-quick-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-top: 0.35rem;
+}
+
+.quick-stat-prereqs {
+  color: #f59e0b;
+}
+
+.quick-stat-divider {
+  color: var(--text-dim);
+}
+
+.quick-stat-unlocks {
+  color: #38bdf8;
 }
 
 .drawer-section {

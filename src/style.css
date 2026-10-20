@@ -285,85 +285,272 @@ html, body {
   border-radius: 8px; padding: 0.6rem 0.85rem; font-size: 0.75rem; color: #fff; z-index: 20; box-shadow: 0 8px 24px rgba(0,0,0,0.6); max-width: 290px;
 }
 
+/* Default hidden states for mobile-specific controls */
+.filter-toggle-mobile-btn { display: none; }
+.filters-mobile-summary { display: none; }
+.graph-subject-legend { display: none; }
+.graph-guide-banner { display: none; }
+
 @media (max-width: 900px) {
   .app-layout { flex-direction: column; }
-  .sidebar-filters { width: 100%; max-height: 240px; }
   .app-layout.graph-active .sidebar-filters { display: none; }
 
-  .app-header {
-    flex-wrap: wrap;
-    padding: 0.75rem 1rem;
-    gap: 0.65rem 0.75rem;
-  }
-
-  .header-actions {
-    display: contents;
-  }
-
-  .header-brand {
-    order: 1;
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-
-  .creator-badge {
-    order: 2;
-    margin-left: auto;
+  /* Mobile Collapsible Filters Panel (Cards View) */
+  .sidebar-filters {
+    width: 100%;
+    padding: 0.5rem 0.85rem;
+    max-height: 44px;
+    border-right: none;
+    border-bottom: 1px solid var(--border-subtle);
+    overflow: hidden;
+    transition: max-height 0.25s ease, background 0.2s ease;
     flex-shrink: 0;
   }
 
-  .header-search-wrap {
-    order: 3;
+  .sidebar-header {
     width: 100%;
-    max-width: 100%;
-    flex: 1 0 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+  }
+
+  .sidebar-header-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     min-width: 0;
   }
 
-  .view-toggle {
-    order: 4;
-    width: 100%;
-    max-width: 440px;
-    margin: 0 auto;
+  .filters-mobile-summary {
+    display: inline-block;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sidebar-header-actions {
     display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
   }
 
-  .view-toggle .toggle-btn {
-    flex: 1;
-    justify-content: center;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.85rem;
+  .filter-toggle-mobile-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: var(--bg-surface);
+    color: #38bdf8;
+    border: 1px solid var(--border-subtle);
+    padding: 0.2rem 0.55rem;
+    border-radius: 5px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
   }
-}
 
-@media (max-width: 600px) {
-  .graph-toolbar {
-    padding: 0.5rem 0.85rem;
-    gap: 0.5rem;
+  .filter-toggle-mobile-btn .toggle-icon {
+    transition: transform 0.2s ease;
   }
-  .graph-subtitle {
+
+  .sidebar-filters:not(.is-expanded) .filter-section,
+  .sidebar-filters:not(.is-expanded) .sidebar-attribution {
     display: none;
   }
-}
 
-@media (max-width: 480px) {
+  .sidebar-filters.is-expanded {
+    max-height: 480px;
+    overflow-y: auto;
+    padding-bottom: 1rem;
+    background: #0d1220;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
+  }
+
+  .sidebar-filters.is-expanded .filter-toggle-mobile-btn .toggle-icon {
+    transform: rotate(180deg);
+  }
+
+  /* Compact 2-Row Mobile Header (Saves ~50% vertical screen space) */
   .app-header {
-    padding: 0.6rem 0.75rem;
-    gap: 0.5rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 0.45rem 0.6rem;
+    padding: 0.5rem 0.85rem;
+  }
+
+  .header-brand {
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+  }
+
+  .brand-logo {
+    width: 26px;
+    height: 26px;
   }
 
   .brand-title {
     font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .brand-subtitle {
-    font-size: 0.68rem;
+    display: none; /* Hide subtitle to preserve vertical height */
+  }
+
+  .header-actions {
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
   }
 
   .creator-badge {
+    display: none; /* Keep header clean; creator credit is in sidebar & drawer */
+  }
+
+  .view-toggle {
+    margin: 0;
+    padding: 2px;
+  }
+
+  .view-toggle .toggle-btn {
     padding: 0.25rem 0.55rem;
-    font-size: 0.72rem;
+    font-size: 0.75rem;
+    gap: 0.25rem;
+  }
+
+  .header-search-wrap {
+    grid-column: 1 / 3;
+    grid-row: 2 / 2;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .search-input {
+    padding: 0.4rem 2rem 0.4rem 2.2rem;
+    font-size: 0.825rem;
+    height: 34px;
+  }
+
+  .search-icon {
+    width: 15px;
+    height: 15px;
+    left: 0.75rem;
+  }
+
+  /* Mobile Subject Color Legend Bar */
+  .graph-subject-legend {
+    display: flex;
+    align-items: center;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding: 0.4rem 0.75rem;
+    background: rgba(14, 19, 31, 0.9);
+    border-bottom: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .graph-subject-legend::-webkit-scrollbar { display: none; }
+
+  .legend-scroll-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .legend-chip {
+    display: inline-flex;
+    align-items: center;
     gap: 0.35rem;
+    padding: 0.2rem 0.5rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .legend-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+  }
+
+  /* "What is this" Interactive Guide Card */
+  .graph-guide-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.45rem 0.75rem;
+    background: linear-gradient(90deg, rgba(30, 58, 138, 0.45), rgba(15, 23, 42, 0.85));
+    border-bottom: 1px solid rgba(59, 130, 246, 0.25);
+    font-size: 0.72rem;
+    color: #cbd5e1;
+    flex-shrink: 0;
+  }
+
+  .graph-guide-banner.is-hidden {
+    display: none;
+  }
+
+  .guide-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .guide-icon {
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+
+  .guide-dismiss-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0.1rem 0.3rem;
+  }
+  .guide-dismiss-btn:hover {
+    color: #fff;
+  }
+
+  /* Slim Floating / Compact Graph Toolbar on Mobile */
+  .graph-toolbar {
+    padding: 0.4rem 0.75rem;
+    gap: 0.4rem;
+  }
+
+  .graph-title {
+    font-size: 0.78rem;
+  }
+
+  .graph-subtitle {
+    display: none;
+  }
+
+  .graph-control-btn {
+    padding: 0.2rem 0.45rem;
+    font-size: 0.7rem;
   }
 }
 
