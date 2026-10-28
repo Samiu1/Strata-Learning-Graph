@@ -473,13 +473,17 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
 
   function setFocusTopic(topic) {
     if (topic) {
-      selectedId = topic.id;
       const idx = nodes.findIndex(n => n.topic.id === topic.id);
       if (idx >= 0) {
+        selectedId = topic.id;
         buildLineage(idx);
         focusNode(idx);
+        markInteraction();
+      } else {
+        selectedId = null;
+        lineage = null;
+        hideTooltip();
       }
-      markInteraction();
     } else {
       selectedId = null;
       lineage = null;
@@ -553,7 +557,9 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     centroidY = nodes.length ? sumY / nodes.length : 0;
     centroidZ = nodes.length ? sumZ / nodes.length : 0;
 
-    if (!selectedId) {
+    if (!selectedId || !nodeMap.has(selectedId)) {
+      selectedId = null;
+      lineage = null;
       camXTarget = SUN_X; camYTarget = GALAXY_CENTER_Y; camZTarget = SUN_Z;
       camX = SUN_X; camY = GALAXY_CENTER_Y; camZ = SUN_Z;
       zoom = getDefaultZoom();
@@ -750,7 +756,7 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     // 2. Draw Active Highlighted Edges with Directional Arrows
     if (hasSel) {
       // 2A. Inbound Prerequisites (prereq b -> dependent a; arrow points at a)
-      const prereqList = Array.from(lineage.prereqEdges);
+      const prereqList = Array.from(lineage.prereqEdges).filter(k => edges[k]);
       prereqList.sort((k1, k2) => {
         const isDir1 = edges[k1].sourceIdx === lineage.targetIdx ? 1 : 0;
         const isDir2 = edges[k2].sourceIdx === lineage.targetIdx ? 1 : 0;
@@ -758,7 +764,9 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       });
 
       prereqList.forEach(k => {
-        const e = edges[k], a = e.sourceIdx, b = e.targetIdx;
+        const e = edges[k];
+        if (!e) return;
+        const a = e.sourceIdx, b = e.targetIdx;
         if (P[a * 3 + 2] === 0 || P[b * 3 + 2] === 0) return;
         const x1 = P[b * 3], y1 = P[b * 3 + 1], x2 = P[a * 3], y2 = P[a * 3 + 1];
         const isDirect = (a === lineage.targetIdx);
@@ -779,7 +787,7 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       });
 
       // 2B. Outbound Unlocks (unlocker b -> unlocked a; arrow points at a)
-      const unlockList = Array.from(lineage.unlockEdges);
+      const unlockList = Array.from(lineage.unlockEdges).filter(k => edges[k]);
       unlockList.sort((k1, k2) => {
         const isDir1 = edges[k1].targetIdx === lineage.targetIdx ? 1 : 0;
         const isDir2 = edges[k2].targetIdx === lineage.targetIdx ? 1 : 0;
@@ -787,7 +795,9 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       });
 
       unlockList.forEach(k => {
-        const e = edges[k], a = e.sourceIdx, b = e.targetIdx;
+        const e = edges[k];
+        if (!e) return;
+        const a = e.sourceIdx, b = e.targetIdx;
         if (P[a * 3 + 2] === 0 || P[b * 3 + 2] === 0) return;
         const x1 = P[b * 3], y1 = P[b * 3 + 1], x2 = P[a * 3], y2 = P[a * 3 + 1];
         const isDirect = (b === lineage.targetIdx);
