@@ -75,6 +75,11 @@ async function init() {
     allDependencies = depsRes.dependencies;
     allClusters = clustersRes.clusters;
 
+    const brandSubtitle = document.querySelector('.brand-subtitle');
+    if (brandSubtitle) {
+      brandSubtitle.textContent = `${allTopics.length.toLocaleString()} skills · ages 4 to 15 · 8 subjects`;
+    }
+
     allTopics.forEach(t => {
       topicMap.set(t.id, t);
       t._searchTokens = `${t.name} ${t.description || ''} ${t.id} ${t.domain} ${(t.standards || []).join(' ')}`.toLowerCase();
@@ -159,9 +164,9 @@ function renderMobileLegend() {
   });
 }
 
-function handleSelectTopic(topic) {
+function handleSelectTopic(topic, triggerEl = null) {
   currentFocusTopic = topic;
-  detailController.open(topic, true);
+  detailController.open(topic, true, triggerEl);
 
   const guideBanner = document.getElementById('graph-guide-banner');
   if (guideBanner) guideBanner.classList.add('is-hidden');
@@ -248,10 +253,16 @@ function setView(view) {
     cardsWrapper.style.display = 'block';
     graphWrapper.style.display = 'none';
     if (resultsBar) resultsBar.style.display = 'flex';
+    if (graphVisualizer && graphVisualizer.setVisible) {
+      graphVisualizer.setVisible(false);
+    }
   } else {
     cardsWrapper.style.display = 'none';
     graphWrapper.style.display = 'flex';
     if (resultsBar) resultsBar.style.display = 'none';
+    if (graphVisualizer && graphVisualizer.setVisible) {
+      graphVisualizer.setVisible(true);
+    }
     if (filteredTopics && filteredTopics.length > 0) {
       graphVisualizer.setGraphData({
         filteredTopics,
@@ -397,7 +408,7 @@ function renderCards(resetScroll = false) {
       });
       card.classList.add('selected');
       card.setAttribute('aria-pressed', 'true');
-      handleSelectTopic(topic);
+      handleSelectTopic(topic, card);
     };
 
     card.addEventListener('click', selectCard);

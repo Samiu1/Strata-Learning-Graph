@@ -32,6 +32,8 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
   let hoverIdx = -1, selectedId = null;
 
   let isDragging = false, isPanning = false, hasMoved = false, lastX = 0, lastY = 0;
+  let dragStartX = 0, dragStartY = 0, totalDragDist = 0;
+  let isVisible = true, rafId = null;
   let P = new Float32Array(0);
 
   // Solar System Celestial Auto-Orbit
@@ -112,9 +114,11 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
         e.preventDefault();
         isPanning = true; hasMoved = false; lastX = e.clientX; lastY = e.clientY;
+        dragStartX = e.clientX; dragStartY = e.clientY; totalDragDist = 0;
         container.style.cursor = 'all-scroll'; container.setPointerCapture(e.pointerId);
       } else if (e.button === 0) {
         isDragging = true; hasMoved = false; lastX = e.clientX; lastY = e.clientY;
+        dragStartX = e.clientX; dragStartY = e.clientY; totalDragDist = 0;
         container.setPointerCapture(e.pointerId);
       }
     } else if (activePointers.size === 2) {
@@ -154,7 +158,9 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     } else if (isPanning) {
       markInteraction();
       const dx = e.clientX - lastX, dy = e.clientY - lastY;
-      if (Math.abs(dx) + Math.abs(dy) > 2) hasMoved = true;
+      totalDragDist += Math.hypot(dx, dy);
+      const distFromStart = Math.hypot(e.clientX - dragStartX, e.clientY - dragStartY);
+      if (distFromStart > 4 || totalDragDist > 4) hasMoved = true;
       const panSpeed = (1 / zoom) * 0.9, cosY = Math.cos(rotY), sinY = Math.sin(rotY);
       camX -= (dx * cosY) * panSpeed; camZ -= (dx * sinY) * panSpeed; camY += dy * panSpeed;
       camXTarget = camX; camYTarget = camY; camZTarget = camZ;
@@ -162,8 +168,10 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     } else if (isDragging) {
       markInteraction();
       const dx = e.clientX - lastX, dy = e.clientY - lastY;
-      const slop = e.pointerType === 'touch' ? 12 : 3;
-      if (Math.abs(dx) + Math.abs(dy) > slop) hasMoved = true;
+      totalDragDist += Math.hypot(dx, dy);
+      const slop = e.pointerType === 'touch' ? 12 : 4;
+      const distFromStart = Math.hypot(e.clientX - dragStartX, e.clientY - dragStartY);
+      if (distFromStart > slop || totalDragDist > slop) hasMoved = true;
       rotY -= dx * 0.0055; tilt = Math.max(-1.15, Math.min(0.2, tilt - dy * 0.004));
       lastX = e.clientX; lastY = e.clientY;
       rotYTarget = null; tiltTarget = null;
@@ -1037,14 +1045,39 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
   }
 
   function loop() {
+    rafId = null;
+    if (!isVisible || (container.offsetWidth === 0 && container.offsetHeight === 0)) {
+      return;
+    }
+
     camX += (camXTarget - camX) * 0.12; camY += (camYTarget - camY) * 0.12; camZ += (camZTarget - camZ) * 0.12;
+
     if (rotYTarget !== null) {
       let d = ((rotYTarget - rotY + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
       rotY += d * 0.12;
-      if (tiltTarget !== null) tilt += (tiltTarget - tilt) * 0.12;
-      if (zoomTarget !== null) zoom += (zoomTarget - zoom) * 0.12;
-      if (Math.abs(d) < 0.006) { rotYTarget = null; tiltTarget = null; zoomTarget = null; }
-    } else {
+      if (Math.abs(d) < 0.004) {
+        rotY = rotYTarget;
+        rotYTarget = null;
+      }
+    }
+
+    if (tiltTarget !== null) {
+      tilt += (tiltTarget - tilt) * 0.12;
+      if (Math.abs(tiltTarget - tilt) < 0.004) {
+        tilt = tiltTarget;
+        tiltTarget = null;
+      }
+    }
+
+    if (zoomTarget !== null) {
+      zoom += (zoomTarget - zoom) * 0.12;
+      if (Math.abs(zoomTarget - zoom) < 0.004) {
+        zoom = zoomTarget;
+        zoomTarget = null;
+      }
+    }
+
+    if (rotYTarget === null) {
       // Solar system celestial auto-orbit animation
       const now = performance.now();
       const hasActiveNode = (selectedId !== null);
@@ -1063,11 +1096,28 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
         rotY += autoSpeed;
       }
     }
+
     draw();
-    requestAnimationFrame(loop);
+    rafId = requestAnimationFrame(loop);
   }
 
-  requestAnimationFrame(loop);
+  function setVisible(visible) {
+    if (isVisible === visible) return;
+    isVisible = visible;
+    if (isVisible) {
+      markInteraction();
+      if (!rafId) {
+        rafId = requestAnimationFrame(loop);
+      }
+    } else {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    }
+  }
+
+  rafId = requestAnimationFrame(loop);
 
   function escapeHtml(str) {
     return (str || '').replace(/[&<>"']/g, m => ({
@@ -1075,5 +1125,5 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     }[m]));
   }
 
-  return { setGraphData, setFocusTopic, resize, fitToView: resetCamera };
+  return { setGraphData, setFocusTopic, resize, fitToView: resetCamera, setVisible };
 }

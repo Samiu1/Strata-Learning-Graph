@@ -39,6 +39,7 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
 
   let currentTopic = null;
   const history = [];
+  let returnFocusElement = null;
 
   // Event Listeners
   closeBtn.addEventListener('click', close);
@@ -68,13 +69,19 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
     }
   });
 
-  function open(topic, addToHistory = true) {
+  function open(topic, addToHistory = true, triggeringElement = null) {
+    if (!drawer.classList.contains('open')) {
+      returnFocusElement = triggeringElement || document.activeElement;
+    }
     if (currentTopic && addToHistory && currentTopic.id !== topic.id) {
       history.push(currentTopic.id);
     }
     renderTopic(topic, addToHistory);
     drawer.classList.add('open');
     backdrop.classList.add('open');
+    requestAnimationFrame(() => {
+      if (closeBtn) closeBtn.focus();
+    });
   }
 
   function close() {
@@ -82,6 +89,10 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
     drawer.classList.remove('expanded');
     backdrop.classList.remove('open');
     if (onClose) onClose();
+    if (returnFocusElement && typeof returnFocusElement.focus === 'function') {
+      returnFocusElement.focus();
+      returnFocusElement = null;
+    }
   }
 
   function renderTopic(topic, updateHistoryState) {

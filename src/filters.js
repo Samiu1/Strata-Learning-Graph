@@ -50,7 +50,7 @@ export function createFilterController({
   function updateSearchPlaceholder() {
     if (!searchInput) return;
     if (window.innerWidth <= 600) {
-      searchInput.placeholder = 'Search 1,591 skills...';
+      searchInput.placeholder = `Search ${allTopics.length.toLocaleString()} skills...`;
     } else {
       searchInput.placeholder = 'Search skills, for example fractions or phonics (Press / to focus)';
     }
@@ -260,8 +260,13 @@ export function createFilterController({
   function addTag(label, onRemove) {
     const tag = document.createElement('div');
     tag.className = 'filter-tag';
-    tag.innerHTML = `<span>${label}</span><span class="filter-tag-del">×</span>`;
-    tag.querySelector('.filter-tag-del').addEventListener('click', onRemove);
+    const labelSpan = document.createElement('span');
+    labelSpan.textContent = label;
+    const removeSpan = document.createElement('span');
+    removeSpan.className = 'filter-tag-del';
+    removeSpan.textContent = '×';
+    removeSpan.addEventListener('click', onRemove);
+    tag.append(labelSpan, removeSpan);
     activeFilterTags.appendChild(tag);
   }
 
