@@ -39,7 +39,7 @@ const unlocksMap = new Map();
 let filteredTopics = [];
 let displayedCount = 48;
 const PAGE_SIZE = 48;
-let currentView = 'graph';
+let currentView = 'cards';
 let currentFocusTopic = null;
 
 let filterController = null;
@@ -131,7 +131,7 @@ async function init() {
     if (btnGraphEmptyReset) {
       btnGraphEmptyReset.addEventListener('click', () => filterController.resetAll());
     }
-    setView('graph');
+    setView('cards');
     applyFilters();
   } catch (err) {
     console.error('Initialization error:', err);

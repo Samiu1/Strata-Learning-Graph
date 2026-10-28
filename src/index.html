@@ -41,7 +41,7 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="drawer.css">
 </head>
-<body data-view="graph">
+<body data-view="cards">
   <div class="app-container" id="app">
     <!-- Header -->
     <header class="app-header" id="app-header">
@@ -65,14 +65,14 @@
 
       <div class="header-actions">
         <div class="view-toggle" id="view-toggle">
-          <button class="toggle-btn active" id="btn-view-graph" title="Skill map">
+          <button class="toggle-btn" id="btn-view-graph" title="Skill map">
             <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
               <path d="M12.232 4.232a2.5 2.5 0 013.536 3.536l-1.225 1.224a.75.75 0 001.061 1.06l1.224-1.224a4 4 0 00-5.656-5.656l-3 3a4 4 0 00.225 5.865.75.75 0 00.977-1.138 2.5 2.5 0 01-.142-3.667l3-3z"/>
               <path d="M11.603 7.963a.75.75 0 00-.977 1.138 2.5 2.5 0 01.142 3.667l-3 3a2.5 2.5 0 01-3.536-3.536l1.225-1.224a.75.75 0 00-1.061-1.06l-1.224 1.224a4 4 0 105.656 5.656l3-3a4 4 0 00-.225-5.865z"/>
             </svg>
             Skill map
           </button>
-          <button class="toggle-btn" id="btn-view-cards" title="Cards View">
+          <button class="toggle-btn active" id="btn-view-cards" title="Cards View">
             <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
               <path fill-rule="evenodd" d="M4.25 2A2.25 2.25 0 002 4.25v2.5A2.25 2.25 0 004.25 9h2.5A2.25 2.25 0 009 6.75v-2.5A2.25 2.25 0 006.75 2h-2.5zm0 9A2.25 2.25 0 002 13.25v2.5A2.25 2.25 0 004.25 18h2.5A2.25 2.25 0 009 15.75v-2.5A2.25 2.25 0 006.75 11h-2.5zm9-9A2.25 2.25 0 0011 4.25v2.5A2.25 2.25 0 0013.25 9h2.5A2.25 2.25 0 0018 6.75v-2.5A2.25 2.25 0 0015.75 2h-2.5zm0 9A2.25 2.25 0 0011 13.25v2.5A2.25 2.25 0 0013.25 18h2.5A2.25 2.25 0 0018 15.75v-2.5A2.25 2.25 0 0015.75 11h-2.5z" clip-rule="evenodd"/>
             </svg>
@@ -90,7 +90,7 @@
     </header>
 
     <!-- Main Body Layout -->
-    <div class="app-layout graph-active">
+    <div class="app-layout">
       <!-- Filter Sidebar -->
       <aside class="sidebar-filters" id="sidebar-filters">
         <div class="sidebar-header" id="sidebar-header">
@@ -187,7 +187,7 @@
       <main class="content-area" id="content-area">
         <div id="sr-status" class="sr-only" role="status" aria-live="polite"></div>
         <!-- Results Summary Bar -->
-        <div class="results-bar" id="results-bar" style="display: none;">
+        <div class="results-bar" id="results-bar">
           <div class="results-stats">
             <span class="count-badge" id="filtered-count">Loading skills...</span>
             <div class="active-filter-tags" id="active-filter-tags"></div>
@@ -195,7 +195,7 @@
         </div>
 
         <!-- Cards View -->
-        <div class="cards-view-wrapper" id="cards-view-wrapper" style="display: none;">
+        <div class="cards-view-wrapper" id="cards-view-wrapper">
           <div class="topics-grid" id="topics-grid"></div>
 
           <!-- Empty State -->
@@ -214,7 +214,7 @@
         </div>
 
         <!-- Graph View Container -->
-        <div class="graph-view-wrapper" id="graph-view-wrapper">
+        <div class="graph-view-wrapper" id="graph-view-wrapper" style="display: none;">
           <div class="graph-toolbar">
             <div class="graph-toolbar-left">
               <span class="graph-title" id="graph-status-title">Skill map</span>
