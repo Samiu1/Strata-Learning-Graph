@@ -1,4 +1,5 @@
 // Detail Drawer Module
+import { renderResearchLoading, renderResearchContent, renderResearchError } from './research.js';
 
 const TYPE_LABELS = {
   CONCEPTUAL: 'Understanding',
@@ -9,7 +10,7 @@ const TYPE_LABELS = {
 };
 const typeLabel = t => TYPE_LABELS[t] || t;
 
-export function createDetailController({ onSelectTopic, onClose, getTopicById, getDependenciesForTopic, clusters, getSubjectColor }) {
+export function createDetailController({ onSelectTopic, onClose, getTopicById, getDependenciesForTopic, clusters, getSubjectColor, research }) {
   const drawer = document.getElementById('detail-drawer');
   const backdrop = document.getElementById('drawer-backdrop');
   const closeBtn = document.getElementById('drawer-btn-close');
@@ -26,6 +27,7 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
 
   const clusterBox = document.getElementById('drawer-cluster-box');
   const clusterText = document.getElementById('drawer-cluster-text');
+  const researchBox = document.getElementById('drawer-research-box');
 
   const prereqsCountEl = document.getElementById('drawer-prereqs-count');
   const prereqsListEl = document.getElementById('drawer-prereqs-list');
@@ -113,6 +115,35 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
       clusterBox.style.display = 'block';
     } else {
       clusterBox.style.display = 'none';
+    }
+
+    // Teaching Research Guide
+    if (researchBox) {
+      if (research && research.has(topic.id)) {
+        researchBox.style.display = 'block';
+        renderResearchLoading(researchBox);
+        const reqTopicId = topic.id;
+        research.get(topic.id)
+          .then(record => {
+            if (!currentTopic || currentTopic.id !== reqTopicId) return;
+            if (record) {
+              renderResearchContent(researchBox, record);
+            } else {
+              researchBox.style.display = 'none';
+            }
+          })
+          .catch(() => {
+            if (!currentTopic || currentTopic.id !== reqTopicId) return;
+            renderResearchError(researchBox, () => {
+              if (currentTopic && currentTopic.id === reqTopicId) {
+                renderTopic(currentTopic, false);
+              }
+            });
+          });
+      } else {
+        researchBox.style.display = 'none';
+        researchBox.innerHTML = '';
+      }
     }
 
     // Dependencies

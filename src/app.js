@@ -2,6 +2,7 @@
 import { createDetailController } from './detail.js';
 import { createGraphVisualizer } from './graph.js';
 import { createFilterController } from './filters.js';
+import { createResearchStore } from './research.js';
 
 const SUBJECT_COLORS = {
   'Science': '#10b981',
@@ -44,6 +45,7 @@ let currentFocusTopic = null;
 let filterController = null;
 let detailController = null;
 let graphVisualizer = null;
+const research = createResearchStore();
 
 // DOM Elements
 const btnViewCards = document.getElementById('btn-view-cards');
@@ -65,7 +67,8 @@ async function init() {
     const [topicsRes, depsRes, clustersRes] = await Promise.all([
       fetch('/data/topics.json').then(r => r.json()),
       fetch('/data/dependencies.json').then(r => r.json()),
-      fetch('/data/clusters.json').then(r => r.json())
+      fetch('/data/clusters.json').then(r => r.json()),
+      research.loadIndex()
     ]);
 
     allTopics = topicsRes.topics;
@@ -95,7 +98,8 @@ async function init() {
         unlocks: unlocksMap.get(id) || []
       }),
       clusters: allClusters,
-      getSubjectColor
+      getSubjectColor,
+      research
     });
 
     graphVisualizer = createGraphVisualizer({
@@ -107,7 +111,8 @@ async function init() {
     filterController = createFilterController({
       allTopics,
       subjectColors: SUBJECT_COLORS,
-      onFilterChange: applyFilters
+      onFilterChange: applyFilters,
+      research
     });
 
     filterController.init();
@@ -260,13 +265,14 @@ function setView(view) {
 }
 
 function applyFilters() {
-  const { query, minAge, maxAge, selectedSubjects, selectedDomain, sortBy } = filterController.getState();
+  const { query, minAge, maxAge, selectedSubjects, selectedDomain, sortBy, hasGuideOnly } = filterController.getState();
 
   filteredTopics = allTopics.filter(t => {
     if (query && !t._searchTokens.includes(query)) return false;
     if (t.ageRangeEnd < minAge || t.ageRangeStart > maxAge) return false;
     if (!selectedSubjects.has(t.subject)) return false;
     if (selectedDomain && t.domain !== selectedDomain) return false;
+    if (hasGuideOnly && !research.has(t.id)) return false;
     return true;
   });
 
@@ -380,6 +386,7 @@ function renderCards(resetScroll = false) {
           Leads to: <strong>${unlockCount}</strong>
         </span>
         ${isFoundation ? '<span class="card-stat-pill" title="Many later skills build on this one.">Foundation skill</span>' : ''}
+        ${research.has(topic.id) ? '<span class="card-stat-pill pill-guide" title="Teaching guide available for this skill">📘 Guide</span>' : ''}
       </div>
     `;
 

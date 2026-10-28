@@ -147,9 +147,19 @@
           </div>
         </section>
 
-
-
-        <!-- Sort Option -->
+        <!-- Teaching Guide Filter -->
+        <section class="filter-section">
+          <div class="section-title-row">
+            <span class="filter-label">Teaching Guide</span>
+          </div>
+          <button type="button" class="guide-filter-chip" id="btn-filter-has-guide" aria-pressed="false">
+            <div class="guide-filter-chip-left">
+              <span class="guide-filter-dot"></span>
+              <span>Only skills with a guide</span>
+            </div>
+            <span class="guide-filter-count" id="guide-filter-count">1,051</span>
+          </button>
+        </section>
         <section class="filter-section">
           <label for="sort-select" class="filter-label">Sort By</label>
           <select id="sort-select" class="custom-select">
@@ -279,6 +289,9 @@
               <h4 class="section-heading">What children this age learn in this area</h4>
               <p class="cluster-text" id="drawer-cluster-text"></p>
             </div>
+
+            <!-- Teaching Research Guide Box -->
+            <div class="drawer-section drawer-research-box" id="drawer-research-box" style="display: none;"></div>
 
             <!-- Interactive Prerequisite Pathway View -->
             <div class="drawer-section">

@@ -2,7 +2,8 @@
 export function createFilterController({
   allTopics,
   subjectColors,
-  onFilterChange
+  onFilterChange,
+  research
 }) {
   const filterState = {
     query: '',
@@ -10,7 +11,8 @@ export function createFilterController({
     maxAge: 15,
     selectedSubjects: new Set(Object.keys(subjectColors)),
     selectedDomain: '',
-    sortBy: 'age-asc'
+    sortBy: 'age-asc',
+    hasGuideOnly: false
   };
 
   const searchInput = document.getElementById('search-input');
@@ -23,6 +25,8 @@ export function createFilterController({
   const agePresets = document.getElementById('age-presets');
   const subjectChipsContainer = document.getElementById('subject-chips');
   const btnSelectAllSubjects = document.getElementById('btn-select-all-subjects');
+  const btnFilterHasGuide = document.getElementById('btn-filter-has-guide');
+  const guideFilterCount = document.getElementById('guide-filter-count');
   const sortSelect = document.getElementById('sort-select');
   const btnResetFilters = document.getElementById('btn-reset-filters');
   const btnEmptyReset = document.getElementById('btn-empty-reset');
@@ -36,6 +40,9 @@ export function createFilterController({
     setupEvents();
     renderSubjectChips();
     updateSearchPlaceholder();
+    if (guideFilterCount && research) {
+      guideFilterCount.textContent = research.topicCount().toLocaleString();
+    }
     updateMobileFilterSummary();
     window.addEventListener('resize', updateSearchPlaceholder);
   }
@@ -53,10 +60,25 @@ export function createFilterController({
     if (!filtersMobileSummary) return;
     const isAllSubjects = filterState.selectedSubjects.size === Object.keys(subjectColors).length;
     const subjText = isAllSubjects ? 'All Subjects' : `${filterState.selectedSubjects.size} Subject${filterState.selectedSubjects.size === 1 ? '' : 's'}`;
-    filtersMobileSummary.textContent = `Ages ${filterState.minAge}–${filterState.maxAge} · ${subjText}`;
+    const guideText = filterState.hasGuideOnly ? ' · Guides only' : '';
+    filtersMobileSummary.textContent = `Ages ${filterState.minAge}–${filterState.maxAge} · ${subjText}${guideText}`;
+  }
+
+  function updateGuideFilterActiveState() {
+    if (!btnFilterHasGuide) return;
+    btnFilterHasGuide.classList.toggle('active', filterState.hasGuideOnly);
+    btnFilterHasGuide.setAttribute('aria-pressed', filterState.hasGuideOnly ? 'true' : 'false');
+    updateMobileFilterSummary();
   }
 
   function setupEvents() {
+    if (btnFilterHasGuide) {
+      btnFilterHasGuide.addEventListener('click', () => {
+        filterState.hasGuideOnly = !filterState.hasGuideOnly;
+        updateGuideFilterActiveState();
+        onFilterChange();
+      });
+    }
     if (btnToggleFiltersMobile && sidebarFilters) {
       const toggleMobileFilters = (e) => {
         if (e.target.closest('#btn-reset-filters')) return;
@@ -226,6 +248,13 @@ export function createFilterController({
         syncAgeFilters();
       });
     }
+    if (filterState.hasGuideOnly) {
+      addTag('With teaching guide', () => {
+        filterState.hasGuideOnly = false;
+        updateGuideFilterActiveState();
+        onFilterChange();
+      });
+    }
   }
 
   function addTag(label, onRemove) {
@@ -254,6 +283,9 @@ export function createFilterController({
 
     filterState.selectedSubjects = new Set(Object.keys(subjectColors));
     updateSubjectChipsActiveState();
+
+    filterState.hasGuideOnly = false;
+    updateGuideFilterActiveState();
 
     filterState.selectedDomain = '';
 

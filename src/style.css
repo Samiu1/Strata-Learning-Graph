@@ -156,6 +156,17 @@ html, body {
 .subject-chip-left { display: flex; align-items: center; gap: 0.5rem; }
 .chip-dot { width: 8px; height: 8px; border-radius: 50%; }
 .chip-count { font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-dim); }
+.guide-filter-chip {
+  display: flex; align-items: center; justify-content: space-between; padding: 0.45rem 0.65rem; font-size: 0.8rem;
+  background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 6px; color: var(--text-muted); cursor: pointer;
+  width: 100%; text-align: left; font-family: inherit; transition: all 0.15s ease;
+}
+.guide-filter-chip:hover { border-color: #38bdf8; color: var(--text-main); }
+.guide-filter-chip.active { background: rgba(56, 189, 248, 0.12); border-color: #38bdf8; color: #fff; font-weight: 600; }
+.guide-filter-chip-left { display: flex; align-items: center; gap: 0.5rem; }
+.guide-filter-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #38bdf8; box-shadow: 0 0 6px rgba(56, 189, 248, 0.5); }
+.guide-filter-count { font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-dim); }
+.guide-filter-chip.active .guide-filter-count { color: #38bdf8; }
 .custom-select {
   width: 100%; padding: 0.5rem 0.75rem; font-family: var(--font-main); font-size: 0.825rem;
   background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 6px; outline: none;
@@ -232,6 +243,10 @@ html, body {
 }
 .card-stat-pill { display: inline-flex; align-items: center; gap: 0.25rem; }
 .card-stat-pill strong { color: var(--text-main); }
+.card-stat-pill.pill-guide {
+  color: #38bdf8; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.25);
+  padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.68rem; font-weight: 500;
+}
 .empty-state { text-align: center; padding: 4rem 1.5rem; }
 .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
 .empty-title { font-size: 1.15rem; font-weight: 600; margin-bottom: 0.4rem; }
