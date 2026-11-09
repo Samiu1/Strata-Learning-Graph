@@ -9,6 +9,7 @@ const SUBJECT_COLORS = {
   'Mathematics': '#3b82f6',
   'English': '#f59e0b',
   'History': '#f43f5e',
+  'Geography': '#f97316',
   'Personal & Social Development': '#a855f7',
   'Life Skills': '#06b6d4',
   'Computing': '#6366f1',
@@ -77,7 +78,8 @@ async function init() {
 
     const brandSubtitle = document.querySelector('.brand-subtitle');
     if (brandSubtitle) {
-      brandSubtitle.textContent = `${allTopics.length.toLocaleString()} skills · ages 4 to 15 · 8 subjects`;
+      const subjectCount = new Set(allTopics.map(t => t.subject)).size;
+      brandSubtitle.textContent = `${allTopics.length.toLocaleString()} skills · ages 4 to 15 · ${subjectCount} subjects`;
     }
 
     allTopics.forEach(t => {

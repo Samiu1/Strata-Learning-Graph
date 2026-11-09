@@ -1,7 +1,7 @@
 {
   "version": "v1",
   "note": "`topicId` depends on `prerequisiteId` (the prerequisite). Directed edges of a DAG.",
-  "edgeCount": 3979,
+  "edgeCount": 4003,
   "dependencies": [
     {
       "topicId": "mt__00ZSLnB7p",
@@ -1862,6 +1862,24 @@
       "prerequisiteId": "mt_WtIFJSCQIT",
       "strength": "soft",
       "reason": "Conditions are stated with triangle notation (AB, angle A), and explaining 'included' versus 'non-included' angles relies on it"
+    },
+    {
+      "topicId": "mt_4coR4NiDTl",
+      "prerequisiteId": "mt_2oswCNuapH",
+      "strength": "soft",
+      "reason": "Recognising stereotypes supports the claim’s requirement not to judge a person or group from a signal."
+    },
+    {
+      "topicId": "mt_4coR4NiDTl",
+      "prerequisiteId": "mt_dALEWRHXnZ",
+      "strength": "soft",
+      "reason": "Using and reading gestures and facial expressions alongside words is the base the variation knowledge builds on."
+    },
+    {
+      "topicId": "mt_4coR4NiDTl",
+      "prerequisiteId": "mt_nIl1kKZHsk",
+      "strength": "soft",
+      "reason": "Understanding that culture and experience shape emotional responses is a closely related conceptual neighbour."
     },
     {
       "topicId": "mt_4emC463IyW",
@@ -3940,6 +3958,12 @@
       "reason": "Must know single letter sounds before r-controlled vowels"
     },
     {
+      "topicId": "mt_A8pSrj0E-D",
+      "prerequisiteId": "mt_fL1Xz8ostr",
+      "strength": "soft",
+      "reason": "Noticing expressive and sensory phrases helps a child explain the picture a simile creates; optional — a child can explain that “ran like the wind” shows speed without having practised spotting recurring story language or choosing favourite phrases"
+    },
+    {
       "topicId": "mt_a9VnPBhoYs",
       "prerequisiteId": "mt_guaaD6Dn2M",
       "strength": "hard",
@@ -4704,8 +4728,8 @@
     {
       "topicId": "mt_av-uRBrhwT",
       "prerequisiteId": "mt_HWYAspz-LK",
-      "strength": "hard",
-      "reason": "Advanced independent plan/revise/edit (reflecting on audience and purpose, amending without teacher prompts) requires the self-critical reading skill as its foundation — a writer cannot revise independently without being able to judge their own work"
+      "strength": "soft",
+      "reason": "independent, unprompted self-critical reading is one route; planned revision can also be guided by peers and adults"
     },
     {
       "topicId": "mt_av-uRBrhwT",
@@ -5684,6 +5708,24 @@
       "prerequisiteId": "mt_YynJoQcm_M",
       "strength": "soft",
       "reason": "Savanna predator-prey (lions/zebras) is foundation for predator-prey strategies"
+    },
+    {
+      "topicId": "mt_bzTJH3XBrx",
+      "prerequisiteId": "mt_fL1Xz8ostr",
+      "strength": "soft",
+      "reason": "Noticing feeling and sensory phrases (\"the icy wind howled\") helps spot a personification"
+    },
+    {
+      "topicId": "mt_bzTJH3XBrx",
+      "prerequisiteId": "mt_sSQlLOnAow",
+      "strength": "soft",
+      "reason": "Recognising characters in stories supports noticing that an animal character behaves like a person"
+    },
+    {
+      "topicId": "mt_bzTJH3XBrx",
+      "prerequisiteId": "mt_SUOhjmRqv9",
+      "strength": "soft",
+      "reason": "Distinguishing literal from figurative language supports explaining a personification"
     },
     {
       "topicId": "mt_c29FaCTNsx",
@@ -6734,6 +6776,24 @@
       "prerequisiteId": "mt_NTAc_EMeHZ",
       "strength": "hard",
       "reason": "'Trying figurative language in writing' builds on 'Borrowing from books you've read'"
+    },
+    {
+      "topicId": "mt_Dc-YYfulcj",
+      "prerequisiteId": "mt_cU3LcEVkBQ",
+      "strength": "soft",
+      "reason": "Knowing that adjectives describe nouns supports sorting proper from common adjectives"
+    },
+    {
+      "topicId": "mt_Dc-YYfulcj",
+      "prerequisiteId": "mt_qzwQAOfurw",
+      "strength": "soft",
+      "reason": "Knowing the term \"adjective\" helps the child explain the rule"
+    },
+    {
+      "topicId": "mt_Dc-YYfulcj",
+      "prerequisiteId": "mt_uM6q_KBWKy",
+      "strength": "soft",
+      "reason": "Capitalising proper names helps explain why a derived adjective keeps the capital"
     },
     {
       "topicId": "mt_deexfCHU9m",
@@ -8400,8 +8460,8 @@
     {
       "topicId": "mt_frDIaXzWbx",
       "prerequisiteId": "mt_1KCwbGvm1F",
-      "strength": "hard",
-      "reason": "Must understand print direction before letter identification matters"
+      "strength": "soft",
+      "reason": "concepts of print support early literacy, but naming letters does not require page directionality"
     },
     {
       "topicId": "mt_fT4G0QloX5",
@@ -8714,6 +8774,18 @@
       "prerequisiteId": "mt_tF6XuKIq8_",
       "strength": "hard",
       "reason": "'Working together for a civic goal' builds on 'Why people join in'"
+    },
+    {
+      "topicId": "mt_G8PH3onbBS",
+      "prerequisiteId": "mt_frDIaXzWbx",
+      "strength": "soft",
+      "reason": "Recognising the letters on the keys and on the screen supports finding keys and spotting errors"
+    },
+    {
+      "topicId": "mt_G8PH3onbBS",
+      "prerequisiteId": "mt_nYU6x2E2T8",
+      "strength": "soft",
+      "reason": "Prior experience typing simple words on a computer makes the keyboard familiar"
     },
     {
       "topicId": "mt_g9RcQOhU5d",
@@ -9262,6 +9334,18 @@
       "reason": "Noticing the gap between decoding and understanding requires first having the foundational idea that reading means making meaning"
     },
     {
+      "topicId": "mt_gvU3c_FLyu",
+      "prerequisiteId": "mt_9lN0SpKlEH",
+      "strength": "soft",
+      "reason": "Selecting conventions for formal letters and scripts provides the genres in which the colon conventions are used."
+    },
+    {
+      "topicId": "mt_gvU3c_FLyu",
+      "prerequisiteId": "mt_uycuqPaiJ1",
+      "strength": "soft",
+      "reason": "Knowing that a colon signals that what follows belongs to what precedes it (as in list colons) supports the label/speaker use."
+    },
+    {
       "topicId": "mt_gv_uoHkdjR",
       "prerequisiteId": "mt__kFxuAgs6d",
       "strength": "hard",
@@ -9785,6 +9869,12 @@
     },
     {
       "topicId": "mt_hJW7hVflm3",
+      "prerequisiteId": "mt_A8pSrj0E-D",
+      "strength": "hard",
+      "reason": "The combined Similes & Metaphors goal includes identifying similes and explaining the shared quality and imagery (its evidence 1); the focused simile claim is that component and must be held first"
+    },
+    {
+      "topicId": "mt_hJW7hVflm3",
       "prerequisiteId": "mt_fL1Xz8ostr",
       "strength": "soft",
       "reason": "Literary language recognition provides context for understanding how similes and metaphors function within texts"
@@ -10182,14 +10272,14 @@
     {
       "topicId": "mt_hzkNpp2PdV",
       "prerequisiteId": "mt_gbTyzvnWzr",
-      "strength": "hard",
-      "reason": "Y6 terminology includes active/passive which must be taught first"
+      "strength": "soft",
+      "reason": "Supports: practising passive-voice writing deepens understanding of the terms active and passive voice; knowing and explaining the terms in given sentences does not require independently producing or choosing the passive in new formal writing"
     },
     {
       "topicId": "mt_hzkNpp2PdV",
       "prerequisiteId": "mt_-tcJeAhK5k",
-      "strength": "hard",
-      "reason": "Y6 terminology builds on Y5 terminology"
+      "strength": "soft",
+      "reason": "Supports: Year 5 terms (modal verb, relative clause, parenthesis, cohesion, ambiguity) are useful background, but accurate use of the eleven Year 6 terms does not require the whole Year 5 list"
     },
     {
       "topicId": "mt_HZvTriQWTh",
@@ -12706,6 +12796,12 @@
       "reason": "Representing four-digit numbers requires knowing their place value"
     },
     {
+      "topicId": "mt_Lcqm4_wR4D",
+      "prerequisiteId": "mt_OJVkWvIaM_",
+      "strength": "soft",
+      "reason": "appreciating similarities and differences between people supports respectful learning about distinct peoples; not required"
+    },
+    {
       "topicId": "mt_LE7nFEwS12",
       "prerequisiteId": "mt_S4G6GLKr1-",
       "strength": "hard",
@@ -14266,6 +14362,24 @@
       "reason": "Modal verbs modify main verbs to express possibility/necessity; learners need a secure grasp of simple verb tenses before adding modal modifiers"
     },
     {
+      "topicId": "mt_nA5OXhzkrh",
+      "prerequisiteId": "mt_enj1sMcfOT",
+      "strength": "soft",
+      "reason": "The progressive form (is swimming) is the main contrast case; enj1 holds it, inside a broader tense-consistency claim."
+    },
+    {
+      "topicId": "mt_nA5OXhzkrh",
+      "prerequisiteId": "mt_j351evNNnB",
+      "strength": "soft",
+      "reason": "Knowing that a word can describe a noun (adjective vs adverb) supports separating \"the swimming dog\" from a gerund."
+    },
+    {
+      "topicId": "mt_nA5OXhzkrh",
+      "prerequisiteId": "mt_yBJyCfhtem",
+      "strength": "hard",
+      "reason": "Recognising an -ing word as doing a noun’s job rather than a verb’s requires the basic noun/verb distinction itself; yBJy’s whole (use common nouns and action verbs appropriately; identify nouns and verbs in simple sentences) is entailed by every evidence item of the gerund claim."
+    },
+    {
       "topicId": "mt_NaqEP8xDhZ",
       "prerequisiteId": "mt_doX1BhmFgk",
       "strength": "hard",
@@ -15474,8 +15588,8 @@
     {
       "topicId": "mt_OTFABm2xdf",
       "prerequisiteId": "mt_4GiE83rJF_",
-      "strength": "hard",
-      "reason": "'Rhythm in rhymes and songs' builds on 'Rhyming words'"
+      "strength": "soft",
+      "reason": "rhyme awareness supports joining in with rhymes, but clapping a beat or keeping a chant’s rhythm does not require it"
     },
     {
       "topicId": "mt_OTFABm2xdf",
@@ -15918,8 +16032,8 @@
     {
       "topicId": "mt_pis4novXWQ",
       "prerequisiteId": "mt_82KKv0Fca3",
-      "strength": "hard",
-      "reason": "Evaluating and editing for consistency requires vocabulary of 'coherence', 'cohesion', 'register', and 'style'"
+      "strength": "soft",
+      "reason": "writing-craft terminology helps talk about revisions but is not needed to choose a clearer word or fix a tense"
     },
     {
       "topicId": "mt_pis4novXWQ",
@@ -18834,14 +18948,20 @@
     {
       "topicId": "mt_T9IXrlxfx2",
       "prerequisiteId": "mt_IdFxLz-UW9",
+      "strength": "soft",
+      "reason": "Supports: phrase and clause analysis (main vs subordinate clauses) helps a learner explain why a sentence is simple, compound, complex or compound-complex; the whole Phrases & Clauses claim (incl. misplaced/dangling-modifier correction) is not required to vary sentence types for effect"
+    },
+    {
+      "topicId": "mt_T9IXrlxfx2",
+      "prerequisiteId": "mt_wq-1OJ_8s5",
       "strength": "hard",
-      "reason": "Choosing sentence types requires understanding how phrases and clauses function"
+      "reason": "Constructing compound, complex and compound-complex sentences requires joining clauses with subordinating (because, when, if) and coordinating (and, but, or) conjunctions"
     },
     {
       "topicId": "mt_T9IXrlxfx2",
       "prerequisiteId": "mt_YQ64pzcLDl",
-      "strength": "hard",
-      "reason": "Constructing complex sentences uses subordinate/relative clauses from KS2"
+      "strength": "soft",
+      "reason": "Supports: relative clauses are one way to build complex and compound-complex sentences; the full sentence-type operation can use adverbial subordination instead, so whole relative-clause mastery is not required"
     },
     {
       "topicId": "mt_tAJH5BrpOx",
@@ -20232,8 +20352,8 @@
     {
       "topicId": "mt_v5yDTWEiyQ",
       "prerequisiteId": "mt_TDUpy57QVM",
-      "strength": "hard",
-      "reason": "Reflecting on the learning process requires the ability to analyse errors — reflection without error analysis stays superficial"
+      "strength": "soft",
+      "reason": "analysing mistakes can deepen reflection but is not needed to say what helped most"
     },
     {
       "topicId": "mt_V6456X6pJE",
@@ -21916,6 +22036,18 @@
       "reason": "HCF/LCM/prime factorisation extends Y5-6 factor pairs and common factors/multiples"
     },
     {
+      "topicId": "mt_xIoQJbQ0yP",
+      "prerequisiteId": "mt_PvU3eoikev",
+      "strength": "soft",
+      "reason": "onset-rime blending (c + at) is a helpful stepping stone towards blending every sound, but not required"
+    },
+    {
+      "topicId": "mt_xIoQJbQ0yP",
+      "prerequisiteId": "mt_UvNrOXny1i",
+      "strength": "soft",
+      "reason": "blending syllables into words supports the idea of joining spoken parts; not required for sound-by-sound blending"
+    },
+    {
       "topicId": "mt_XirhnAB6Ye",
       "prerequisiteId": "mt_f8n4txtLej",
       "strength": "soft",
@@ -23441,6 +23573,12 @@
     },
     {
       "topicId": "mt_ZhvwM6LMBL",
+      "prerequisiteId": "mt_1KCwbGvm1F",
+      "strength": "hard",
+      "reason": "reading connected text aloud follows left-to-right, top-to-bottom, page-by-page print"
+    },
+    {
+      "topicId": "mt_ZhvwM6LMBL",
       "prerequisiteId": "mt__KHQttMde3",
       "strength": "hard",
       "reason": "Must be able to decode before fluency"
@@ -23460,8 +23598,8 @@
     {
       "topicId": "mt_zIzJGkaj0Q",
       "prerequisiteId": "mt_h-z88yf9Pn",
-      "strength": "hard",
-      "reason": "Digital citizenship as a concept requires knowing the term and vocabulary of 'rights', 'responsibility', and 'ethical'"
+      "strength": "soft",
+      "reason": "ethics/citizenship vocabulary supports digital citizenship but is not required to be kind and safe online"
     },
     {
       "topicId": "mt_zIzJGkaj0Q",
@@ -23474,6 +23612,12 @@
       "prerequisiteId": "mt_q3vRl4dddK",
       "strength": "hard",
       "reason": "Digital citizenship builds on basic safety awareness"
+    },
+    {
+      "topicId": "mt_zIzJGkaj0Q",
+      "prerequisiteId": "mt_wzUzVEBqJb",
+      "strength": "hard",
+      "reason": "being kind online starts from knowing that the people behind screens have their own feelings and thoughts"
     },
     {
       "topicId": "mt_ZJC7JnnPCu",

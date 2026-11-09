@@ -513,13 +513,14 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
 
     const subjectAngles = {
       'Science': 0.0,
-      'Mathematics': (Math.PI * 2) / 8,
-      'English': (Math.PI * 4) / 8,
-      'History': (Math.PI * 6) / 8,
-      'Personal & Social Development': Math.PI,
-      'Life Skills': (Math.PI * 10) / 8,
-      'Computing': (Math.PI * 12) / 8,
-      'Learning to Learn': (Math.PI * 14) / 8
+      'Mathematics': (Math.PI * 2) / 9,
+      'English': (Math.PI * 4) / 9,
+      'History': (Math.PI * 6) / 9,
+      'Geography': (Math.PI * 8) / 9,
+      'Personal & Social Development': (Math.PI * 10) / 9,
+      'Life Skills': (Math.PI * 12) / 9,
+      'Computing': (Math.PI * 14) / 9,
+      'Learning to Learn': (Math.PI * 16) / 9
     };
 
     nodeMap.clear();

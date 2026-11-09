@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "version": "v1",
-  "exportedAt": "2026-10-28T02:06:04.142Z",
-  "topicFileSha256": "d5c94672824a507a5670b74c66537f19fa9703f636f6950a5b0b4d018b03247c",
+  "exportedAt": "2026-11-02T21:58:18.320Z",
+  "topicFileSha256": "a4dfd9ef69eed7a1e175bc4cefe9d9b03fdbe17df93a914d1a3f1d0942ab71ef",
   "recordCount": 1049,
   "coverage": {
-    "topicCount": 1852,
+    "topicCount": 1861,
     "withResearch": 1049,
-    "withoutResearch": 803,
+    "withoutResearch": 812,
     "bySubject": {
       "Computing": {
         "topics": 52,
@@ -15,9 +15,9 @@
         "withoutResearch": 52
       },
       "English": {
-        "topics": 331,
+        "topics": 339,
         "withResearch": 0,
-        "withoutResearch": 331
+        "withoutResearch": 339
       },
       "Geography": {
         "topics": 22,
@@ -45,9 +45,9 @@
         "withoutResearch": 79
       },
       "Personal & Social Development": {
-        "topics": 117,
+        "topics": 118,
         "withResearch": 0,
-        "withoutResearch": 117
+        "withoutResearch": 118
       },
       "Science": {
         "topics": 576,
@@ -116,6 +116,7 @@
       "mt_4IxR66uGLc",
       "mt_4PA9IrxtCQ",
       "mt_4bc3EAxhlY",
+      "mt_4coR4NiDTl",
       "mt_4fK8Bb8Tr_",
       "mt_4zgPzc6yu5",
       "mt_5CcwPYEafI",
@@ -181,6 +182,7 @@
       "mt_A0htaNaK7b",
       "mt_A2hKhHXgL5",
       "mt_A4YUbzUFan",
+      "mt_A8pSrj0E-D",
       "mt_AHAFw-atka",
       "mt_AHXePdicRf",
       "mt_AbnwmKD8oe",
@@ -216,6 +218,7 @@
       "mt_DMvKfP4uGC",
       "mt_DRNXFr0ds6",
       "mt_DVSHx3YMkN",
+      "mt_Dc-YYfulcj",
       "mt_DcSMuVWgKU",
       "mt_Dg5lQZFpav",
       "mt_DkzsZdyaL2",
@@ -246,6 +249,7 @@
       "mt_FtCLISvSGw",
       "mt_FwI7q7DSIx",
       "mt_G7jhJrOD2P",
+      "mt_G8PH3onbBS",
       "mt_GKL5Usnd11",
       "mt_GLY3R3YSlf",
       "mt_GtL2PVfRYP",
@@ -316,6 +320,7 @@
       "mt_LNYTNpJOGT",
       "mt_LN_g2b3d34",
       "mt_LPYPuSaxv_",
+      "mt_Lcqm4_wR4D",
       "mt_LhkP_KKIRS",
       "mt_Lu4H4mbsqO",
       "mt_LuwHnQItF_",
@@ -550,6 +555,7 @@
       "mt_bn5ggh84qD",
       "mt_bnwHo5wfCD",
       "mt_bvxkT1nepy",
+      "mt_bzTJH3XBrx",
       "mt_c-F__Qe23X",
       "mt_cB7hV8sw7X",
       "mt_cEQqskOaoo",
@@ -606,6 +612,7 @@
       "mt_gbTyzvnWzr",
       "mt_gf4RUcACLg",
       "mt_ggcamLzXAy",
+      "mt_gvU3c_FLyu",
       "mt_h-z88yf9Pn",
       "mt_h02-C8PRrj",
       "mt_h3vmvQW5Wa",
@@ -687,6 +694,7 @@
       "mt_n3ojDXoaqC",
       "mt_n51zr0RFt4",
       "mt_n6GhzDPllD",
+      "mt_nA5OXhzkrh",
       "mt_nDAcXoPa0c",
       "mt_nFBLNoChD0",
       "mt_nHvYYrhoM7",
@@ -834,6 +842,7 @@
       "mt_x3DJWIEHBq",
       "mt_x7V1qrkiqH",
       "mt_xAG0aMeAIN",
+      "mt_xIoQJbQ0yP",
       "mt_xYjD_kA70s",
       "mt_x_Lg4RASVU",
       "mt_xjl6AEhnjk",
