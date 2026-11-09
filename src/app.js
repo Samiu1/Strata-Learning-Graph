@@ -2,12 +2,14 @@
 import { createDetailController } from './detail.js';
 import { createGraphVisualizer } from './graph.js';
 import { createFilterController } from './filters.js';
+import { createResearchStore } from './research.js';
 
 const SUBJECT_COLORS = {
   'Science': '#10b981',
   'Mathematics': '#3b82f6',
   'English': '#f59e0b',
   'History': '#f43f5e',
+  'Geography': '#f97316',
   'Personal & Social Development': '#a855f7',
   'Life Skills': '#06b6d4',
   'Computing': '#6366f1',
@@ -17,6 +19,15 @@ const SUBJECT_COLORS = {
 function getSubjectColor(subject) {
   return SUBJECT_COLORS[subject] || '#818cf8';
 }
+
+const TYPE_LABELS = {
+  CONCEPTUAL: 'Understanding',
+  PROCEDURAL: 'Step-by-step',
+  REPRESENTATIONAL: 'Visual',
+  LANGUAGE: 'Language',
+  META: 'Learning habits'
+};
+const typeLabel = t => TYPE_LABELS[t] || t;
 
 // Global State
 let allTopics = [];
@@ -29,12 +40,13 @@ const unlocksMap = new Map();
 let filteredTopics = [];
 let displayedCount = 48;
 const PAGE_SIZE = 48;
-let currentView = 'graph';
+let currentView = 'cards';
 let currentFocusTopic = null;
 
 let filterController = null;
 let detailController = null;
 let graphVisualizer = null;
+const research = createResearchStore();
 
 // DOM Elements
 const btnViewCards = document.getElementById('btn-view-cards');
@@ -50,16 +62,25 @@ const paginationInfo = document.getElementById('pagination-info');
 async function init() {
   try {
     filteredCountBadge.textContent = 'Loading dataset...';
+    document.getElementById('graph-status-title').textContent = 'Loading skills...';
+    document.getElementById('graph-status-subtitle').textContent = '';
 
     const [topicsRes, depsRes, clustersRes] = await Promise.all([
       fetch('/data/topics.json').then(r => r.json()),
       fetch('/data/dependencies.json').then(r => r.json()),
-      fetch('/data/clusters.json').then(r => r.json())
+      fetch('/data/clusters.json').then(r => r.json()),
+      research.loadIndex()
     ]);
 
     allTopics = topicsRes.topics;
     allDependencies = depsRes.dependencies;
     allClusters = clustersRes.clusters;
+
+    const brandSubtitle = document.querySelector('.brand-subtitle');
+    if (brandSubtitle) {
+      const subjectCount = new Set(allTopics.map(t => t.subject)).size;
+      brandSubtitle.textContent = `${allTopics.length.toLocaleString()} skills · ages 4 to 15 · ${subjectCount} subjects`;
+    }
 
     allTopics.forEach(t => {
       topicMap.set(t.id, t);
@@ -84,7 +105,8 @@ async function init() {
         unlocks: unlocksMap.get(id) || []
       }),
       clusters: allClusters,
-      getSubjectColor
+      getSubjectColor,
+      research
     });
 
     graphVisualizer = createGraphVisualizer({
@@ -96,17 +118,28 @@ async function init() {
     filterController = createFilterController({
       allTopics,
       subjectColors: SUBJECT_COLORS,
-      onFilterChange: applyFilters
+      onFilterChange: applyFilters,
+      research
     });
 
     filterController.init();
     setupViewEvents();
     renderMobileLegend();
-    setView('graph');
+    const graphEmpty = document.getElementById('graph-empty');
+    if (graphEmpty) {
+      graphEmpty.addEventListener('pointerdown', e => e.stopPropagation());
+    }
+    const btnGraphEmptyReset = document.getElementById('btn-graph-empty-reset');
+    if (btnGraphEmptyReset) {
+      btnGraphEmptyReset.addEventListener('click', () => filterController.resetAll());
+    }
+    setView('cards');
     applyFilters();
   } catch (err) {
     console.error('Initialization error:', err);
     filteredCountBadge.textContent = 'Error loading dataset';
+    document.getElementById('graph-status-title').textContent = 'Could not load the skills';
+    document.getElementById('graph-status-subtitle').textContent = 'Check your connection and refresh the page.';
   }
 }
 
@@ -133,9 +166,9 @@ function renderMobileLegend() {
   });
 }
 
-function handleSelectTopic(topic) {
+function handleSelectTopic(topic, triggerEl = null) {
   currentFocusTopic = topic;
-  detailController.open(topic, true);
+  detailController.open(topic, true, triggerEl);
 
   const guideBanner = document.getElementById('graph-guide-banner');
   if (guideBanner) guideBanner.classList.add('is-hidden');
@@ -189,8 +222,10 @@ function setupViewEvents() {
   const btnDismissGuide = document.getElementById('btn-dismiss-guide');
   const guideBanner = document.getElementById('graph-guide-banner');
   if (btnDismissGuide && guideBanner) {
+    try { if (localStorage.getItem('strata.guideDismissed') === '1') guideBanner.classList.add('is-hidden'); } catch (e) {}
     btnDismissGuide.addEventListener('click', () => {
       guideBanner.classList.add('is-hidden');
+      try { localStorage.setItem('strata.guideDismissed', '1'); } catch (e) {}
     });
   }
 
@@ -220,10 +255,16 @@ function setView(view) {
     cardsWrapper.style.display = 'block';
     graphWrapper.style.display = 'none';
     if (resultsBar) resultsBar.style.display = 'flex';
+    if (graphVisualizer && graphVisualizer.setVisible) {
+      graphVisualizer.setVisible(false);
+    }
   } else {
     cardsWrapper.style.display = 'none';
     graphWrapper.style.display = 'flex';
     if (resultsBar) resultsBar.style.display = 'none';
+    if (graphVisualizer && graphVisualizer.setVisible) {
+      graphVisualizer.setVisible(true);
+    }
     if (filteredTopics && filteredTopics.length > 0) {
       graphVisualizer.setGraphData({
         filteredTopics,
@@ -237,19 +278,20 @@ function setView(view) {
 }
 
 function applyFilters() {
-  const { query, minAge, maxAge, selectedSubjects, selectedDomain, sortBy } = filterController.getState();
+  const { query, minAge, maxAge, selectedSubjects, selectedDomain, sortBy, hasGuideOnly } = filterController.getState();
 
   filteredTopics = allTopics.filter(t => {
     if (query && !t._searchTokens.includes(query)) return false;
     if (t.ageRangeEnd < minAge || t.ageRangeStart > maxAge) return false;
     if (!selectedSubjects.has(t.subject)) return false;
     if (selectedDomain && t.domain !== selectedDomain) return false;
+    if (hasGuideOnly && !research.has(t.id)) return false;
     return true;
   });
 
   sortTopics(filteredTopics, sortBy);
 
-  filteredCountBadge.textContent = `${filteredTopics.length.toLocaleString()} topic${filteredTopics.length === 1 ? '' : 's'} found`;
+  filteredCountBadge.textContent = `${filteredTopics.length.toLocaleString()} skill${filteredTopics.length === 1 ? '' : 's'} found`;
   filterController.updateActiveFilterTags();
 
   displayedCount = PAGE_SIZE;
@@ -262,6 +304,16 @@ function applyFilters() {
       topicMap,
       focusTopic: currentFocusTopic
     });
+  }
+
+  const srStatus = document.getElementById('sr-status');
+  if (srStatus) {
+    srStatus.textContent = `${filteredTopics.length.toLocaleString()} skill${filteredTopics.length === 1 ? '' : 's'} found`;
+  }
+
+  const graphEmpty = document.getElementById('graph-empty');
+  if (graphEmpty) {
+    graphEmpty.hidden = filteredTopics.length > 0;
   }
 }
 
@@ -322,11 +374,11 @@ function renderCards(resetScroll = false) {
     const color = getSubjectColor(topic.subject);
     const prereqCount = prereqsMap.get(topic.id)?.length || 0;
     const unlockCount = unlocksMap.get(topic.id)?.length || 0;
-    const centralityPercent = Math.round((topic.centrality || 0) * 100);
+    const isFoundation = (topic.centrality || 0) >= 0.16;
 
     card.setAttribute(
       'aria-label',
-      `${topic.name}. ${topic.subject}, Ages ${topic.ageRangeStart} to ${topic.ageRangeEnd}. ${prereqCount} prerequisites, ${unlockCount} unlocks.`
+      `${topic.name}. ${topic.subject}, Ages ${topic.ageRangeStart} to ${topic.ageRangeEnd}. ${typeLabel(topic.type)}. Learn first: ${prereqCount}, Leads to: ${unlockCount}.`
     );
 
     card.innerHTML = `
@@ -335,20 +387,19 @@ function renderCards(resetScroll = false) {
           <span class="pill-subject" style="background-color: ${color}22; color: ${color}; border: 1px solid ${color}55;">${escapeHtml(topic.subject)}</span>
           <span class="pill-age">Age ${topic.ageRangeStart}–${topic.ageRangeEnd}</span>
         </div>
-        <span class="card-type-tag">${topic.type}</span>
+        <span class="card-type-tag">${typeLabel(topic.type)}</span>
       </div>
       <h3 class="card-title">${escapeHtml(topic.name)}</h3>
       <p class="card-desc">${escapeHtml(topic.description || '')}</p>
       <div class="card-footer">
-        <span class="card-stat-pill" title="Required prerequisites">
-          <strong>${prereqCount}</strong> prereq${prereqCount === 1 ? '' : 's'}
+        <span class="card-stat-pill" title="Required skills to learn first">
+          Learn first: <strong>${prereqCount}</strong>
         </span>
-        <span class="card-stat-pill" title="Topics unlocked">
-          <strong>${unlockCount}</strong> unlocks
+        <span class="card-stat-pill" title="Skills this leads to">
+          Leads to: <strong>${unlockCount}</strong>
         </span>
-        <span class="card-stat-pill" title="${centralityPercent}% of topics depend on this one.">
-          Centrality: <strong>${centralityPercent}%</strong>
-        </span>
+        ${isFoundation ? '<span class="card-stat-pill" title="Many later skills build on this one.">Foundation skill</span>' : ''}
+        ${research.has(topic.id) ? '<span class="card-stat-pill pill-guide" title="Teaching guide available for this skill">📘 Guide</span>' : ''}
       </div>
     `;
 
@@ -359,7 +410,7 @@ function renderCards(resetScroll = false) {
       });
       card.classList.add('selected');
       card.setAttribute('aria-pressed', 'true');
-      handleSelectTopic(topic);
+      handleSelectTopic(topic, card);
     };
 
     card.addEventListener('click', selectCard);
@@ -380,7 +431,7 @@ function renderCards(resetScroll = false) {
     paginationInfo.textContent = `Showing 1–${slice.length} of ${filteredTopics.length.toLocaleString()}`;
   } else {
     btnLoadMore.style.display = 'none';
-    paginationInfo.textContent = `Showing all ${filteredTopics.length.toLocaleString()} topics`;
+    paginationInfo.textContent = `Showing all ${filteredTopics.length.toLocaleString()} skills`;
   }
 }
 

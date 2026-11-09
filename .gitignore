@@ -3,3 +3,5 @@ node_modules/
 *.log
 .env
 .env.*
+
+.agents/skills/marble-builder/examples/dist/

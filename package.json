@@ -10,7 +10,13 @@
     "dev": "node scripts/server.mjs",
     "start": "node scripts/server.mjs",
     "ui": "node scripts/server.mjs",
+    "build:research": "node scripts/build-research.mjs",
     "validate": "node scripts/validate.mjs",
-    "test": "node --test scripts/*.test.mjs"
+    "test": "node --test scripts/*.test.mjs",
+    "alignments:check": "node scripts/curriculum-alignments.mjs check",
+    "alignments:normalize": "node scripts/curriculum-alignments.mjs normalize",
+    "alignments:project": "node scripts/curriculum-alignments.mjs project",
+    "alignments:generate": "node scripts/generate-alignment-artifacts.mjs --write",
+    "alignments:generated-check": "node scripts/generate-alignment-artifacts.mjs"
   }
 }

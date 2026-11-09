@@ -32,10 +32,13 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
   let hoverIdx = -1, selectedId = null;
 
   let isDragging = false, isPanning = false, hasMoved = false, lastX = 0, lastY = 0;
+  let dragStartX = 0, dragStartY = 0, totalDragDist = 0;
+  let isVisible = true, rafId = null;
   let P = new Float32Array(0);
 
   // Solar System Celestial Auto-Orbit
-  const AUTO_ORBIT_SPEED = 0.0011;
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const AUTO_ORBIT_SPEED = prefersReducedMotion ? 0 : 0.0011;
   let autoSpeed = AUTO_ORBIT_SPEED;
   let lastInteractionTime = 0; // 0 ensures rotation starts immediately upon graph load
 
@@ -111,9 +114,11 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
         e.preventDefault();
         isPanning = true; hasMoved = false; lastX = e.clientX; lastY = e.clientY;
+        dragStartX = e.clientX; dragStartY = e.clientY; totalDragDist = 0;
         container.style.cursor = 'all-scroll'; container.setPointerCapture(e.pointerId);
       } else if (e.button === 0) {
         isDragging = true; hasMoved = false; lastX = e.clientX; lastY = e.clientY;
+        dragStartX = e.clientX; dragStartY = e.clientY; totalDragDist = 0;
         container.setPointerCapture(e.pointerId);
       }
     } else if (activePointers.size === 2) {
@@ -153,7 +158,9 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     } else if (isPanning) {
       markInteraction();
       const dx = e.clientX - lastX, dy = e.clientY - lastY;
-      if (Math.abs(dx) + Math.abs(dy) > 2) hasMoved = true;
+      totalDragDist += Math.hypot(dx, dy);
+      const distFromStart = Math.hypot(e.clientX - dragStartX, e.clientY - dragStartY);
+      if (distFromStart > 4 || totalDragDist > 4) hasMoved = true;
       const panSpeed = (1 / zoom) * 0.9, cosY = Math.cos(rotY), sinY = Math.sin(rotY);
       camX -= (dx * cosY) * panSpeed; camZ -= (dx * sinY) * panSpeed; camY += dy * panSpeed;
       camXTarget = camX; camYTarget = camY; camZTarget = camZ;
@@ -161,8 +168,10 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     } else if (isDragging) {
       markInteraction();
       const dx = e.clientX - lastX, dy = e.clientY - lastY;
-      const slop = e.pointerType === 'touch' ? 12 : 3;
-      if (Math.abs(dx) + Math.abs(dy) > slop) hasMoved = true;
+      totalDragDist += Math.hypot(dx, dy);
+      const slop = e.pointerType === 'touch' ? 12 : 4;
+      const distFromStart = Math.hypot(e.clientX - dragStartX, e.clientY - dragStartY);
+      if (distFromStart > slop || totalDragDist > slop) hasMoved = true;
       rotY -= dx * 0.0055; tilt = Math.max(-1.15, Math.min(0.2, tilt - dy * 0.004));
       lastX = e.clientX; lastY = e.clientY;
       rotYTarget = null; tiltTarget = null;
@@ -207,8 +216,8 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     markInteraction();
     selectedId = null; lineage = null; hoverIdx = -1;
     hideTooltip(); resetCamera();
-    statusTitle.textContent = `3D Curriculum Galaxy (${nodes.length.toLocaleString()} topics)`;
-    statusSubtitle.textContent = `Rotate: Drag · Pan: Middle/Shift+Drag · Zoom: Scroll · Click any node to explore connections`;
+    statusTitle.textContent = `Skill map (${nodes.length.toLocaleString()} skills)`;
+    statusSubtitle.textContent = `Each dot is a skill. Click one to see what comes before and after. Drag to rotate, scroll to zoom.`;
     if (onResetFocus) onResetFocus();
   });
 
@@ -335,8 +344,8 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     if (idx < 0) {
       selectedId = null; lineage = null;
       camXTarget = SUN_X; camYTarget = GALAXY_CENTER_Y; camZTarget = SUN_Z;
-      statusTitle.textContent = `3D Curriculum Galaxy (${nodes.length.toLocaleString()} topics)`;
-      statusSubtitle.textContent = `Rotate: Drag · Pan: Middle/Shift+Drag · Zoom: Scroll · Click any node to explore connections`;
+      statusTitle.textContent = `Skill map (${nodes.length.toLocaleString()} skills)`;
+      statusSubtitle.textContent = `Each dot is a skill. Click one to see what comes before and after. Drag to rotate, scroll to zoom.`;
       if (onResetFocus) onResetFocus();
       return;
     }
@@ -413,7 +422,7 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     const dU = directUnlockNodes.size, sU = unlockNodes.size - dU;
     const selTopic = nodes[targetIdx].topic;
     statusTitle.innerHTML = `<span style="color:#ffffff; font-weight:700;">★ ${escapeHtml(selTopic.name)}</span>`;
-    statusSubtitle.innerHTML = `<span style="color:#f59e0b; font-weight:600;">🟡 ${dP} Direct Prereq${dP===1?'':'s'}${sP > 0 ? ` <span style="color:#fde68a; font-weight:400;">(+${sP} secondary)</span>` : ''}</span> · <span style="color:#38bdf8; font-weight:600;">🔵 ${dU} Direct Unlock${dU===1?'':'s'}${sU > 0 ? ` <span style="color:#bae6fd; font-weight:400;">(+${sU} secondary)</span>` : ''}</span> · <span style="color:#94a3b8;">Click any node to navigate</span>`;
+    statusSubtitle.innerHTML = `<span style="color:#f59e0b; font-weight:600;">🟡 ${dP} Learn first${sP > 0 ? ` <span style="color:#fde68a; font-weight:400;">(+${sP} secondary)</span>` : ''}</span> · <span style="color:#38bdf8; font-weight:600;">🔵 ${dU} Leads to${sU > 0 ? ` <span style="color:#bae6fd; font-weight:400;">(+${sU} secondary)</span>` : ''}</span> · <span style="color:#94a3b8;">Click any node to navigate</span>`;
   }
 
   function showTooltip(x, y, node) {
@@ -426,27 +435,27 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       if (node.topic.id === selectedId) {
         relTag = '<div style="color: #ffffff; font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; letter-spacing: 0.03em;">★ SELECTED</div>';
       } else if (lineage.directPrereqNodes.has(node.idx)) {
-        relTag = '<div style="color: #f59e0b; font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; letter-spacing: 0.03em;">🟡 DIRECT PREREQUISITE</div>';
+        relTag = '<div style="color: #f59e0b; font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; letter-spacing: 0.03em;">🟡 LEARN FIRST</div>';
         const edge = edges.find(e => e.sourceIdx === lineage.targetIdx && e.targetIdx === node.idx);
         if (edge && edge.reason) {
           reasonText = `<div style="margin-top: 5px; padding-top: 5px; border-top: 1px dashed rgba(245, 158, 11, 0.35); font-size: 0.72rem; color: #fde68a; font-style: italic;">"${escapeHtml(edge.reason)}"</div>`;
         }
       } else if (lineage.prereqNodes.has(node.idx)) {
-        relTag = '<div style="color: #fde68a; font-size: 0.7rem; font-weight: 600; margin-bottom: 3px;">🟡 SECONDARY PREREQUISITE (Ancestor requirement)</div>';
+        relTag = '<div style="color: #fde68a; font-size: 0.7rem; font-weight: 600; margin-bottom: 3px;">🟡 ALSO LEARN FIRST</div>';
       } else if (lineage.directUnlockNodes.has(node.idx)) {
-        relTag = '<div style="color: #38bdf8; font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; letter-spacing: 0.03em;">🔵 DIRECT UNLOCK</div>';
+        relTag = '<div style="color: #38bdf8; font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; letter-spacing: 0.03em;">🔵 LEADS TO</div>';
         const edge = edges.find(e => e.targetIdx === lineage.targetIdx && e.sourceIdx === node.idx);
         if (edge && edge.reason) {
           reasonText = `<div style="margin-top: 5px; padding-top: 5px; border-top: 1px dashed rgba(56, 189, 248, 0.35); font-size: 0.72rem; color: #bae6fd; font-style: italic;">"${escapeHtml(edge.reason)}"</div>`;
         }
       } else if (lineage.unlockNodes.has(node.idx)) {
-        relTag = '<div style="color: #bae6fd; font-size: 0.7rem; font-weight: 600; margin-bottom: 3px;">🔵 SECONDARY UNLOCK </div>';
+        relTag = '<div style="color: #bae6fd; font-size: 0.7rem; font-weight: 600; margin-bottom: 3px;">🔵 LEADS TO LATER</div>';
       }
     }
 
     const clickPrompt = (selectedId && node.topic.id !== selectedId)
       ? '<div style="margin-top: 6px; font-size: 0.68rem; font-weight: 600; color: #38bdf8; display: flex; align-items: center; gap: 4px;">Click node to focus & navigate →</div>'
-      : '<div style="margin-top: 4px; font-size: 0.68rem; color: #94a3b8;">Click to inspect topic & prerequisite pathways</div>';
+      : '<div style="margin-top: 4px; font-size: 0.68rem; color: #94a3b8;">Click to inspect skill and what comes next</div>';
 
     tooltip.innerHTML = `
       ${relTag}
@@ -472,18 +481,22 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
 
   function setFocusTopic(topic) {
     if (topic) {
-      selectedId = topic.id;
       const idx = nodes.findIndex(n => n.topic.id === topic.id);
       if (idx >= 0) {
+        selectedId = topic.id;
         buildLineage(idx);
         focusNode(idx);
+        markInteraction();
+      } else {
+        selectedId = null;
+        lineage = null;
+        hideTooltip();
       }
-      markInteraction();
     } else {
       selectedId = null;
       lineage = null;
-      statusTitle.textContent = `3D Curriculum Galaxy (${nodes.length.toLocaleString()} topics)`;
-      statusSubtitle.textContent = `Rotate: Drag · Pan: Middle/Shift+Drag · Zoom: Scroll · Click any node to explore connections`;
+      statusTitle.textContent = `Skill map (${nodes.length.toLocaleString()} skills)`;
+      statusSubtitle.textContent = `Each dot is a skill. Click one to see what comes before and after. Drag to rotate, scroll to zoom.`;
       hideTooltip();
     }
   }
@@ -495,18 +508,19 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
   }
 
   function build3DData(filteredTopics, dependencies) {
-    statusTitle.textContent = `3D Curriculum Galaxy (${filteredTopics.length.toLocaleString()} topics)`;
-    statusSubtitle.textContent = `Rotate: Left Drag · Pan: Middle Drag / Shift+Drag · Zoom: Scroll`;
+    statusTitle.textContent = `Skill map (${filteredTopics.length.toLocaleString()} skills)`;
+    statusSubtitle.textContent = `Each dot is a skill. Click one to see what comes before and after. Drag to rotate, scroll to zoom.`;
 
     const subjectAngles = {
       'Science': 0.0,
-      'Mathematics': (Math.PI * 2) / 8,
-      'English': (Math.PI * 4) / 8,
-      'History': (Math.PI * 6) / 8,
-      'Personal & Social Development': Math.PI,
-      'Life Skills': (Math.PI * 10) / 8,
-      'Computing': (Math.PI * 12) / 8,
-      'Learning to Learn': (Math.PI * 14) / 8
+      'Mathematics': (Math.PI * 2) / 9,
+      'English': (Math.PI * 4) / 9,
+      'History': (Math.PI * 6) / 9,
+      'Geography': (Math.PI * 8) / 9,
+      'Personal & Social Development': (Math.PI * 10) / 9,
+      'Life Skills': (Math.PI * 12) / 9,
+      'Computing': (Math.PI * 14) / 9,
+      'Learning to Learn': (Math.PI * 16) / 9
     };
 
     nodeMap.clear();
@@ -552,7 +566,9 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     centroidY = nodes.length ? sumY / nodes.length : 0;
     centroidZ = nodes.length ? sumZ / nodes.length : 0;
 
-    if (!selectedId) {
+    if (!selectedId || !nodeMap.has(selectedId)) {
+      selectedId = null;
+      lineage = null;
       camXTarget = SUN_X; camYTarget = GALAXY_CENTER_Y; camZTarget = SUN_Z;
       camX = SUN_X; camY = GALAXY_CENTER_Y; camZ = SUN_Z;
       zoom = getDefaultZoom();
@@ -654,7 +670,7 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     const now = performance.now();
 
     // 0. Ambient Cosmic Star Dust (deepest background layer)
-    drawStarDust(now, cy, sy, ct, st, cx, cyy, sc, hasSel);
+    drawStarDust(prefersReducedMotion ? 0 : now, cy, sy, ct, st, cx, cyy, sc, hasSel);
 
     // 1. Draw Subtle Orbital Age Reference Rings (when no node selected)
     if (!hasSel && nodes.length > 0) {
@@ -749,7 +765,7 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     // 2. Draw Active Highlighted Edges with Directional Arrows
     if (hasSel) {
       // 2A. Inbound Prerequisites (prereq b -> dependent a; arrow points at a)
-      const prereqList = Array.from(lineage.prereqEdges);
+      const prereqList = Array.from(lineage.prereqEdges).filter(k => edges[k]);
       prereqList.sort((k1, k2) => {
         const isDir1 = edges[k1].sourceIdx === lineage.targetIdx ? 1 : 0;
         const isDir2 = edges[k2].sourceIdx === lineage.targetIdx ? 1 : 0;
@@ -757,7 +773,9 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       });
 
       prereqList.forEach(k => {
-        const e = edges[k], a = e.sourceIdx, b = e.targetIdx;
+        const e = edges[k];
+        if (!e) return;
+        const a = e.sourceIdx, b = e.targetIdx;
         if (P[a * 3 + 2] === 0 || P[b * 3 + 2] === 0) return;
         const x1 = P[b * 3], y1 = P[b * 3 + 1], x2 = P[a * 3], y2 = P[a * 3 + 1];
         const isDirect = (a === lineage.targetIdx);
@@ -778,7 +796,7 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       });
 
       // 2B. Outbound Unlocks (unlocker b -> unlocked a; arrow points at a)
-      const unlockList = Array.from(lineage.unlockEdges);
+      const unlockList = Array.from(lineage.unlockEdges).filter(k => edges[k]);
       unlockList.sort((k1, k2) => {
         const isDir1 = edges[k1].targetIdx === lineage.targetIdx ? 1 : 0;
         const isDir2 = edges[k2].targetIdx === lineage.targetIdx ? 1 : 0;
@@ -786,7 +804,9 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
       });
 
       unlockList.forEach(k => {
-        const e = edges[k], a = e.sourceIdx, b = e.targetIdx;
+        const e = edges[k];
+        if (!e) return;
+        const a = e.sourceIdx, b = e.targetIdx;
         if (P[a * 3 + 2] === 0 || P[b * 3 + 2] === 0) return;
         const x1 = P[b * 3], y1 = P[b * 3 + 1], x2 = P[a * 3], y2 = P[a * 3 + 1];
         const isDirect = (b === lineage.targetIdx);
@@ -1010,7 +1030,7 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     let pCount = 0;
     for (const b of directPrereqBadges) {
       if (pCount >= maxDirectBadges) break;
-      if (drawNodeBadge(b.name, '🟡 PREREQUISITE', b.sx, b.sy, b.r, '#f59e0b', '#fde68a', '#f59e0b', false)) {
+      if (drawNodeBadge(b.name, '🟡 LEARN FIRST', b.sx, b.sy, b.r, '#f59e0b', '#fde68a', '#f59e0b', false)) {
         pCount++;
       }
     }
@@ -1018,7 +1038,7 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     let uCount = 0;
     for (const b of directUnlockBadges) {
       if (uCount >= maxDirectBadges) break;
-      if (drawNodeBadge(b.name, '🔵 UNLOCKS', b.sx, b.sy, b.r, '#38bdf8', '#bae6fd', '#38bdf8', false)) {
+      if (drawNodeBadge(b.name, '🔵 LEADS TO', b.sx, b.sy, b.r, '#38bdf8', '#bae6fd', '#38bdf8', false)) {
         uCount++;
        }
     }
@@ -1026,14 +1046,39 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
   }
 
   function loop() {
+    rafId = null;
+    if (!isVisible || (container.offsetWidth === 0 && container.offsetHeight === 0)) {
+      return;
+    }
+
     camX += (camXTarget - camX) * 0.12; camY += (camYTarget - camY) * 0.12; camZ += (camZTarget - camZ) * 0.12;
+
     if (rotYTarget !== null) {
       let d = ((rotYTarget - rotY + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
       rotY += d * 0.12;
-      if (tiltTarget !== null) tilt += (tiltTarget - tilt) * 0.12;
-      if (zoomTarget !== null) zoom += (zoomTarget - zoom) * 0.12;
-      if (Math.abs(d) < 0.006) { rotYTarget = null; tiltTarget = null; zoomTarget = null; }
-    } else {
+      if (Math.abs(d) < 0.004) {
+        rotY = rotYTarget;
+        rotYTarget = null;
+      }
+    }
+
+    if (tiltTarget !== null) {
+      tilt += (tiltTarget - tilt) * 0.12;
+      if (Math.abs(tiltTarget - tilt) < 0.004) {
+        tilt = tiltTarget;
+        tiltTarget = null;
+      }
+    }
+
+    if (zoomTarget !== null) {
+      zoom += (zoomTarget - zoom) * 0.12;
+      if (Math.abs(zoomTarget - zoom) < 0.004) {
+        zoom = zoomTarget;
+        zoomTarget = null;
+      }
+    }
+
+    if (rotYTarget === null) {
       // Solar system celestial auto-orbit animation
       const now = performance.now();
       const hasActiveNode = (selectedId !== null);
@@ -1052,11 +1097,28 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
         rotY += autoSpeed;
       }
     }
+
     draw();
-    requestAnimationFrame(loop);
+    rafId = requestAnimationFrame(loop);
   }
 
-  requestAnimationFrame(loop);
+  function setVisible(visible) {
+    if (isVisible === visible) return;
+    isVisible = visible;
+    if (isVisible) {
+      markInteraction();
+      if (!rafId) {
+        rafId = requestAnimationFrame(loop);
+      }
+    } else {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    }
+  }
+
+  rafId = requestAnimationFrame(loop);
 
   function escapeHtml(str) {
     return (str || '').replace(/[&<>"']/g, m => ({
@@ -1064,5 +1126,5 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     }[m]));
   }
 
-  return { setGraphData, setFocusTopic, resize, fitToView: resetCamera };
+  return { setGraphData, setFocusTopic, resize, fitToView: resetCamera, setVisible };
 }

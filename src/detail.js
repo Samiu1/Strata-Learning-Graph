@@ -1,6 +1,16 @@
 // Detail Drawer Module
+import { renderResearchLoading, renderResearchContent, renderResearchError } from './research.js';
 
-export function createDetailController({ onSelectTopic, onClose, getTopicById, getDependenciesForTopic, clusters, getSubjectColor }) {
+const TYPE_LABELS = {
+  CONCEPTUAL: 'Understanding',
+  PROCEDURAL: 'Step-by-step',
+  REPRESENTATIONAL: 'Visual',
+  LANGUAGE: 'Language',
+  META: 'Learning habits'
+};
+const typeLabel = t => TYPE_LABELS[t] || t;
+
+export function createDetailController({ onSelectTopic, onClose, getTopicById, getDependenciesForTopic, clusters, getSubjectColor, research }) {
   const drawer = document.getElementById('detail-drawer');
   const backdrop = document.getElementById('drawer-backdrop');
   const closeBtn = document.getElementById('drawer-btn-close');
@@ -17,6 +27,7 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
 
   const clusterBox = document.getElementById('drawer-cluster-box');
   const clusterText = document.getElementById('drawer-cluster-text');
+  const researchBox = document.getElementById('drawer-research-box');
 
   const prereqsCountEl = document.getElementById('drawer-prereqs-count');
   const prereqsListEl = document.getElementById('drawer-prereqs-list');
@@ -28,6 +39,7 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
 
   let currentTopic = null;
   const history = [];
+  let returnFocusElement = null;
 
   // Event Listeners
   closeBtn.addEventListener('click', close);
@@ -57,13 +69,19 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
     }
   });
 
-  function open(topic, addToHistory = true) {
+  function open(topic, addToHistory = true, triggeringElement = null) {
+    if (!drawer.classList.contains('open')) {
+      returnFocusElement = triggeringElement || document.activeElement;
+    }
     if (currentTopic && addToHistory && currentTopic.id !== topic.id) {
       history.push(currentTopic.id);
     }
     renderTopic(topic, addToHistory);
     drawer.classList.add('open');
     backdrop.classList.add('open');
+    requestAnimationFrame(() => {
+      if (closeBtn) closeBtn.focus();
+    });
   }
 
   function close() {
@@ -71,13 +89,18 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
     drawer.classList.remove('expanded');
     backdrop.classList.remove('open');
     if (onClose) onClose();
+    if (returnFocusElement && typeof returnFocusElement.focus === 'function') {
+      returnFocusElement.focus();
+      returnFocusElement = null;
+    }
   }
 
   function renderTopic(topic, updateHistoryState) {
     currentTopic = topic;
     backBtn.disabled = history.length === 0;
 
-    topicIdEl.textContent = topic.id;
+    topicIdEl.dataset.id = topic.id;
+    topicIdEl.onclick = async () => { try { await navigator.clipboard.writeText(topic.id); topicIdEl.textContent = 'Copied'; setTimeout(() => topicIdEl.textContent = 'Copy ID', 1200); } catch (e) {} };
     titleEl.textContent = topic.name;
     descEl.textContent = topic.description || 'No description available.';
 
@@ -89,7 +112,7 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
 
     domainEl.textContent = topic.domain;
     ageEl.textContent = `Ages ${topic.ageRangeStart}–${topic.ageRangeEnd}`;
-    typeEl.textContent = topic.type;
+    typeEl.textContent = typeLabel(topic.type);
 
     // Cluster summary (parent-friendly context)
     const matchedCluster = clusters.find(
@@ -105,6 +128,35 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
       clusterBox.style.display = 'none';
     }
 
+    // Teaching Research Guide
+    if (researchBox) {
+      if (research && research.has(topic.id)) {
+        researchBox.style.display = 'block';
+        renderResearchLoading(researchBox);
+        const reqTopicId = topic.id;
+        research.get(topic.id)
+          .then(record => {
+            if (!currentTopic || currentTopic.id !== reqTopicId) return;
+            if (record) {
+              renderResearchContent(researchBox, record);
+            } else {
+              researchBox.style.display = 'none';
+            }
+          })
+          .catch(() => {
+            if (!currentTopic || currentTopic.id !== reqTopicId) return;
+            renderResearchError(researchBox, () => {
+              if (currentTopic && currentTopic.id === reqTopicId) {
+                renderTopic(currentTopic, false);
+              }
+            });
+          });
+      } else {
+        researchBox.style.display = 'none';
+        researchBox.innerHTML = '';
+      }
+    }
+
     // Dependencies
     const { prereqs, unlocks } = getDependenciesForTopic(topic.id);
     prereqsCountEl.textContent = prereqs.length;
@@ -113,10 +165,10 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
     const quickPrereqsEl = document.getElementById('quick-stat-prereqs');
     const quickUnlocksEl = document.getElementById('quick-stat-unlocks');
     if (quickPrereqsEl) {
-      quickPrereqsEl.textContent = `🟡 ${prereqs.length} Prerequisite${prereqs.length === 1 ? '' : 's'}`;
+      quickPrereqsEl.textContent = `🟡 Learn first: ${prereqs.length}`;
     }
     if (quickUnlocksEl) {
-      quickUnlocksEl.textContent = `🔵 ${unlocks.length} Unlock${unlocks.length === 1 ? '' : 's'}`;
+      quickUnlocksEl.textContent = `🔵 Leads to: ${unlocks.length}`;
     }
 
     renderPrereqList(prereqsListEl, prereqs, 'prereq');
@@ -134,7 +186,7 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
     } else {
       const li = document.createElement('li');
       li.className = 'evidence-item';
-      li.textContent = 'Evidence criteria pending specification.';
+      li.textContent = 'No checkpoints listed yet.';
       evidenceListEl.appendChild(li);
     }
 
@@ -166,7 +218,7 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
       emptyDiv.style.fontSize = '0.75rem';
       emptyDiv.style.color = 'var(--text-dim)';
       emptyDiv.style.fontStyle = 'italic';
-      emptyDiv.textContent = type === 'prereq' ? 'No prerequisites (Foundational concept)' : 'No known onward dependencies';
+      emptyDiv.textContent = type === 'prereq' ? 'Nothing needed first. This is a starting skill.' : 'No later skills depend on this one.';
       container.appendChild(emptyDiv);
       return;
     }
@@ -178,7 +230,8 @@ export function createDetailController({ onSelectTopic, onClose, getTopicById, g
       div.className = 'dep-item';
 
       const isHard = dep.strength === 'hard';
-      const strengthBadge = `<span class="${isHard ? 'dep-badge-hard' : 'dep-badge-soft'}">${dep.strength.toUpperCase()}</span>`;
+      const strengthTitle = isHard ? "Needed first: this skill is hard to learn without it." : "Helpful first: it makes this skill easier.";
+      const strengthBadge = `<span class="${isHard ? 'dep-badge-hard' : 'dep-badge-soft'}" title="${strengthTitle}">${isHard ? 'NEEDED FIRST' : 'HELPFUL FIRST'}</span>`;
       const topicName = targetTopic ? targetTopic.name : targetId;
       const ageText = targetTopic ? ` (Ages ${targetTopic.ageRangeStart}–${targetTopic.ageRangeEnd})` : '';
 

@@ -2,7 +2,8 @@
 export function createFilterController({
   allTopics,
   subjectColors,
-  onFilterChange
+  onFilterChange,
+  research
 }) {
   const filterState = {
     query: '',
@@ -10,7 +11,8 @@ export function createFilterController({
     maxAge: 15,
     selectedSubjects: new Set(Object.keys(subjectColors)),
     selectedDomain: '',
-    sortBy: 'age-asc'
+    sortBy: 'age-asc',
+    hasGuideOnly: false
   };
 
   const searchInput = document.getElementById('search-input');
@@ -23,6 +25,8 @@ export function createFilterController({
   const agePresets = document.getElementById('age-presets');
   const subjectChipsContainer = document.getElementById('subject-chips');
   const btnSelectAllSubjects = document.getElementById('btn-select-all-subjects');
+  const btnFilterHasGuide = document.getElementById('btn-filter-has-guide');
+  const guideFilterCount = document.getElementById('guide-filter-count');
   const sortSelect = document.getElementById('sort-select');
   const btnResetFilters = document.getElementById('btn-reset-filters');
   const btnEmptyReset = document.getElementById('btn-empty-reset');
@@ -36,6 +40,9 @@ export function createFilterController({
     setupEvents();
     renderSubjectChips();
     updateSearchPlaceholder();
+    if (guideFilterCount && research) {
+      guideFilterCount.textContent = research.topicCount().toLocaleString();
+    }
     updateMobileFilterSummary();
     window.addEventListener('resize', updateSearchPlaceholder);
   }
@@ -43,9 +50,9 @@ export function createFilterController({
   function updateSearchPlaceholder() {
     if (!searchInput) return;
     if (window.innerWidth <= 600) {
-      searchInput.placeholder = 'Search 1,591 topics...';
+      searchInput.placeholder = `Search ${allTopics.length.toLocaleString()} skills...`;
     } else {
-      searchInput.placeholder = 'Search topics, concepts, standards... (Press / to focus)';
+      searchInput.placeholder = 'Search skills, for example fractions or phonics (Press / to focus)';
     }
   }
 
@@ -53,10 +60,25 @@ export function createFilterController({
     if (!filtersMobileSummary) return;
     const isAllSubjects = filterState.selectedSubjects.size === Object.keys(subjectColors).length;
     const subjText = isAllSubjects ? 'All Subjects' : `${filterState.selectedSubjects.size} Subject${filterState.selectedSubjects.size === 1 ? '' : 's'}`;
-    filtersMobileSummary.textContent = `Ages ${filterState.minAge}–${filterState.maxAge} · ${subjText}`;
+    const guideText = filterState.hasGuideOnly ? ' · Guides only' : '';
+    filtersMobileSummary.textContent = `Ages ${filterState.minAge}–${filterState.maxAge} · ${subjText}${guideText}`;
+  }
+
+  function updateGuideFilterActiveState() {
+    if (!btnFilterHasGuide) return;
+    btnFilterHasGuide.classList.toggle('active', filterState.hasGuideOnly);
+    btnFilterHasGuide.setAttribute('aria-pressed', filterState.hasGuideOnly ? 'true' : 'false');
+    updateMobileFilterSummary();
   }
 
   function setupEvents() {
+    if (btnFilterHasGuide) {
+      btnFilterHasGuide.addEventListener('click', () => {
+        filterState.hasGuideOnly = !filterState.hasGuideOnly;
+        updateGuideFilterActiveState();
+        onFilterChange();
+      });
+    }
     if (btnToggleFiltersMobile && sidebarFilters) {
       const toggleMobileFilters = (e) => {
         if (e.target.closest('#btn-reset-filters')) return;
@@ -165,7 +187,9 @@ export function createFilterController({
     });
 
     Object.keys(subjectColors).forEach(subject => {
-      const chip = document.createElement('div');
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.setAttribute('aria-pressed', 'true');
       chip.className = 'subject-chip active';
       chip.dataset.subject = subject;
       const color = subjectColors[subject];
@@ -201,6 +225,7 @@ export function createFilterController({
   function updateSubjectChipsActiveState() {
     subjectChipsContainer.querySelectorAll('.subject-chip').forEach(chip => {
       chip.classList.toggle('active', filterState.selectedSubjects.has(chip.dataset.subject));
+      chip.setAttribute('aria-pressed', filterState.selectedSubjects.has(chip.dataset.subject) ? 'true' : 'false');
     });
     updateMobileFilterSummary();
   }
@@ -223,13 +248,25 @@ export function createFilterController({
         syncAgeFilters();
       });
     }
+    if (filterState.hasGuideOnly) {
+      addTag('With teaching guide', () => {
+        filterState.hasGuideOnly = false;
+        updateGuideFilterActiveState();
+        onFilterChange();
+      });
+    }
   }
 
   function addTag(label, onRemove) {
     const tag = document.createElement('div');
     tag.className = 'filter-tag';
-    tag.innerHTML = `<span>${label}</span><span class="filter-tag-del">×</span>`;
-    tag.querySelector('.filter-tag-del').addEventListener('click', onRemove);
+    const labelSpan = document.createElement('span');
+    labelSpan.textContent = label;
+    const removeSpan = document.createElement('span');
+    removeSpan.className = 'filter-tag-del';
+    removeSpan.textContent = '×';
+    removeSpan.addEventListener('click', onRemove);
+    tag.append(labelSpan, removeSpan);
     activeFilterTags.appendChild(tag);
   }
 
@@ -251,6 +288,9 @@ export function createFilterController({
 
     filterState.selectedSubjects = new Set(Object.keys(subjectColors));
     updateSubjectChipsActiveState();
+
+    filterState.hasGuideOnly = false;
+    updateGuideFilterActiveState();
 
     filterState.selectedDomain = '';
 
