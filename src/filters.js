@@ -1,4 +1,27 @@
 // Filter Controls Module
+export const CURRICULUM_OPTIONS = [
+  { id: 'all', label: 'All Curricula' },
+  { id: 'ontario', label: 'Ontario (Canada)' },
+  { id: 'acara', label: 'Australia (ACARA v9)' },
+  { id: 'us', label: 'United States (Common Core & NGSS)' },
+  { id: 'uk', label: 'United Kingdom (KS1–2)' },
+  { id: 'ncert', label: 'India (NCERT Foundational)' },
+  { id: 'ib', label: 'International (IB PYP)' }
+];
+
+export function matchesCurriculum(topic, curriculumId) {
+  if (!curriculumId || curriculumId === 'all') return true;
+  const standards = topic.standards || [];
+  if (standards.length === 0) return false;
+  if (curriculumId === 'ontario') return standards.some(s => s.startsWith('the-ontario-curriculum-'));
+  if (curriculumId === 'acara') return standards.some(s => s.startsWith('acara-v9:'));
+  if (curriculumId === 'us') return standards.some(s => s.startsWith('ccss-') || s.startsWith('ngss-') || s.startsWith('c3-'));
+  if (curriculumId === 'uk') return standards.some(s => s.startsWith('uk-nc-'));
+  if (curriculumId === 'ncert') return standards.some(s => s.startsWith('ncert-'));
+  if (curriculumId === 'ib') return standards.some(s => s.startsWith('ib-pyp-'));
+  return true;
+}
+
 export function createFilterController({
   allTopics,
   subjectColors,
@@ -10,6 +33,7 @@ export function createFilterController({
     minAge: 4,
     maxAge: 15,
     selectedSubjects: new Set(Object.keys(subjectColors)),
+    selectedCurriculum: 'all',
     selectedDomain: '',
     sortBy: 'age-asc',
     hasGuideOnly: false
@@ -23,6 +47,7 @@ export function createFilterController({
   const ageMinVal = document.getElementById('age-min-val');
   const ageMaxVal = document.getElementById('age-max-val');
   const agePresets = document.getElementById('age-presets');
+  const curriculumSelect = document.getElementById('curriculum-select');
   const subjectChipsContainer = document.getElementById('subject-chips');
   const btnSelectAllSubjects = document.getElementById('btn-select-all-subjects');
   const btnFilterHasGuide = document.getElementById('btn-filter-has-guide');
@@ -38,6 +63,7 @@ export function createFilterController({
 
   function init() {
     setupEvents();
+    renderCurriculumOptions();
     renderSubjectChips();
     updateSearchPlaceholder();
     if (guideFilterCount && research) {
@@ -45,6 +71,34 @@ export function createFilterController({
     }
     updateMobileFilterSummary();
     window.addEventListener('resize', updateSearchPlaceholder);
+  }
+
+  function renderCurriculumOptions() {
+    if (!curriculumSelect) return;
+    curriculumSelect.innerHTML = '';
+
+    const counts = {};
+    counts['all'] = allTopics.length;
+    CURRICULUM_OPTIONS.forEach(opt => {
+      if (opt.id !== 'all') {
+        counts[opt.id] = allTopics.filter(t => matchesCurriculum(t, opt.id)).length;
+      }
+    });
+
+    CURRICULUM_OPTIONS.forEach(opt => {
+      const option = document.createElement('option');
+      option.value = opt.id;
+      const cnt = counts[opt.id] || 0;
+      if (opt.id === 'all') {
+        option.textContent = `${opt.label} (${cnt.toLocaleString()} skills)`;
+      } else if (cnt > 0) {
+        option.textContent = `${opt.label} (${cnt.toLocaleString()} skills)`;
+      } else {
+        option.textContent = `${opt.label} (In progress)`;
+      }
+      curriculumSelect.appendChild(option);
+    });
+    curriculumSelect.value = filterState.selectedCurriculum;
   }
 
   function updateSearchPlaceholder() {
@@ -60,8 +114,10 @@ export function createFilterController({
     if (!filtersMobileSummary) return;
     const isAllSubjects = filterState.selectedSubjects.size === Object.keys(subjectColors).length;
     const subjText = isAllSubjects ? 'All Subjects' : `${filterState.selectedSubjects.size} Subject${filterState.selectedSubjects.size === 1 ? '' : 's'}`;
+    const currOpt = CURRICULUM_OPTIONS.find(c => c.id === filterState.selectedCurriculum);
+    const currText = (currOpt && currOpt.id !== 'all') ? ` · ${currOpt.label.split(' (')[0]}` : '';
     const guideText = filterState.hasGuideOnly ? ' · Guides only' : '';
-    filtersMobileSummary.textContent = `Ages ${filterState.minAge}–${filterState.maxAge} · ${subjText}${guideText}`;
+    filtersMobileSummary.textContent = `Ages ${filterState.minAge}–${filterState.maxAge}${currText} · ${subjText}${guideText}`;
   }
 
   function updateGuideFilterActiveState() {
@@ -150,6 +206,14 @@ export function createFilterController({
       updateSubjectChipsActiveState();
       onFilterChange();
     });
+
+    if (curriculumSelect) {
+      curriculumSelect.addEventListener('change', () => {
+        filterState.selectedCurriculum = curriculumSelect.value;
+        updateMobileFilterSummary();
+        onFilterChange();
+      });
+    }
 
     sortSelect.addEventListener('change', () => {
       filterState.sortBy = sortSelect.value;
@@ -248,6 +312,16 @@ export function createFilterController({
         syncAgeFilters();
       });
     }
+    if (filterState.selectedCurriculum && filterState.selectedCurriculum !== 'all') {
+      const currOpt = CURRICULUM_OPTIONS.find(c => c.id === filterState.selectedCurriculum);
+      const currLabel = currOpt ? currOpt.label.split(' (')[0] : filterState.selectedCurriculum;
+      addTag(`Curriculum: ${currLabel}`, () => {
+        filterState.selectedCurriculum = 'all';
+        if (curriculumSelect) curriculumSelect.value = 'all';
+        updateMobileFilterSummary();
+        onFilterChange();
+      });
+    }
     if (filterState.hasGuideOnly) {
       addTag('With teaching guide', () => {
         filterState.hasGuideOnly = false;
@@ -288,6 +362,9 @@ export function createFilterController({
 
     filterState.selectedSubjects = new Set(Object.keys(subjectColors));
     updateSubjectChipsActiveState();
+
+    filterState.selectedCurriculum = 'all';
+    if (curriculumSelect) curriculumSelect.value = 'all';
 
     filterState.hasGuideOnly = false;
     updateGuideFilterActiveState();
