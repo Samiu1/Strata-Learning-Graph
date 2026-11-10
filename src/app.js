@@ -1,7 +1,7 @@
 // Main Application Coordinator & View Engine
 import { createDetailController } from './detail.js';
 import { createGraphVisualizer } from './graph.js';
-import { createFilterController } from './filters.js';
+import { createFilterController, matchesCurriculum } from './filters.js';
 import { createResearchStore } from './research.js';
 
 const SUBJECT_COLORS = {
@@ -278,7 +278,7 @@ function setView(view) {
 }
 
 function applyFilters() {
-  const { query, minAge, maxAge, selectedSubjects, selectedDomain, sortBy, hasGuideOnly } = filterController.getState();
+  const { query, minAge, maxAge, selectedSubjects, selectedDomain, sortBy, hasGuideOnly, selectedCurriculum } = filterController.getState();
 
   filteredTopics = allTopics.filter(t => {
     if (query && !t._searchTokens.includes(query)) return false;
@@ -286,6 +286,7 @@ function applyFilters() {
     if (!selectedSubjects.has(t.subject)) return false;
     if (selectedDomain && t.domain !== selectedDomain) return false;
     if (hasGuideOnly && !research.has(t.id)) return false;
+    if (!matchesCurriculum(t, selectedCurriculum)) return false;
     return true;
   });
 
