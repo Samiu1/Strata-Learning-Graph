@@ -371,58 +371,37 @@ export function createGraphVisualizer({ onSelectTopic, onResetFocus, getSubjectC
     zoomTarget = isMobile ? Math.max(zoom, 1.85) : Math.max(zoom, 1.35);
   }
 
-  // Build dual directional lineage: Prerequisites (inbound) and Unlocks (outbound)
+  // Build dual directional lineage: Direct Prerequisites (inbound) and Unlocks (outbound)
   function buildLineage(targetIdx) {
     const directPrereqNodes = new Set(), directUnlockNodes = new Set();
     const prereqNodes = new Set(), prereqEdges = new Set();
     const unlockNodes = new Set(), unlockEdges = new Set();
 
-    // 1. Inbound Prerequisites (e.sourceIdx depends on e.targetIdx)
-    const pQueue = [targetIdx];
-    while (pQueue.length > 0) {
-      const u = pQueue.shift();
-      const inc = incident[u] || [];
-      for (const edgeIdx of inc) {
-        const e = edges[edgeIdx];
-        if (e.sourceIdx === u) {
-          prereqEdges.add(edgeIdx);
-          if (u === targetIdx && e.targetIdx !== targetIdx) {
-            directPrereqNodes.add(e.targetIdx);
-          }
-          if (!prereqNodes.has(e.targetIdx) && e.targetIdx !== targetIdx) {
-            prereqNodes.add(e.targetIdx); pQueue.push(e.targetIdx);
-          }
-        }
+    const inc = incident[targetIdx] || [];
+    for (const edgeIdx of inc) {
+      const e = edges[edgeIdx];
+      // 1. Direct Inbound Prerequisites (targetIdx depends on e.targetIdx)
+      if (e.sourceIdx === targetIdx && e.targetIdx !== targetIdx) {
+        prereqEdges.add(edgeIdx);
+        directPrereqNodes.add(e.targetIdx);
+        prereqNodes.add(e.targetIdx);
       }
-    }
-
-    // 2. Outbound Unlocks (e.targetIdx is prerequisite for e.sourceIdx)
-    const uQueue = [targetIdx];
-    while (uQueue.length > 0) {
-      const u = uQueue.shift();
-      const inc = incident[u] || [];
-      for (const edgeIdx of inc) {
-        const e = edges[edgeIdx];
-        if (e.targetIdx === u) {
-          unlockEdges.add(edgeIdx);
-          if (u === targetIdx && e.sourceIdx !== targetIdx) {
-            directUnlockNodes.add(e.sourceIdx);
-          }
-          if (!unlockNodes.has(e.sourceIdx) && e.sourceIdx !== targetIdx) {
-            unlockNodes.add(e.sourceIdx); uQueue.push(e.sourceIdx);
-          }
-        }
+      // 2. Direct Outbound Unlocks (targetIdx is prerequisite for e.sourceIdx)
+      if (e.targetIdx === targetIdx && e.sourceIdx !== targetIdx) {
+        unlockEdges.add(edgeIdx);
+        directUnlockNodes.add(e.sourceIdx);
+        unlockNodes.add(e.sourceIdx);
       }
     }
 
     const allNodes = new Set([targetIdx, ...prereqNodes, ...unlockNodes]);
     lineage = { targetIdx, prereqNodes, prereqEdges, directPrereqNodes, unlockNodes, unlockEdges, directUnlockNodes, allNodes };
 
-    const dP = directPrereqNodes.size, sP = prereqNodes.size - dP;
-    const dU = directUnlockNodes.size, sU = unlockNodes.size - dU;
+    const dP = directPrereqNodes.size;
+    const dU = directUnlockNodes.size;
     const selTopic = nodes[targetIdx].topic;
     statusTitle.innerHTML = `<span style="color:#ffffff; font-weight:700;">★ ${escapeHtml(selTopic.name)}</span>`;
-    statusSubtitle.innerHTML = `<span style="color:#f59e0b; font-weight:600;">🟡 ${dP} Learn first${sP > 0 ? ` <span style="color:#fde68a; font-weight:400;">(+${sP} secondary)</span>` : ''}</span> · <span style="color:#38bdf8; font-weight:600;">🔵 ${dU} Leads to${sU > 0 ? ` <span style="color:#bae6fd; font-weight:400;">(+${sU} secondary)</span>` : ''}</span> · <span style="color:#94a3b8;">Click any node to navigate</span>`;
+    statusSubtitle.innerHTML = `<span style="color:#f59e0b; font-weight:600;">🟡 ${dP} Learn first</span> · <span style="color:#38bdf8; font-weight:600;">🔵 ${dU} Leads to</span> · <span style="color:#94a3b8;">Click any node to navigate</span>`;
   }
 
   function showTooltip(x, y, node) {
